@@ -23,7 +23,9 @@ class LoadController extends Controller
 	const CONTENT_TYPE2="multipart/mixed";
 	const SUCCESS_IMG="/basic/web/static/img/weiwei.jpg";
 	const ERROR_IMG="/basic/web/static/img/jinjian.jpg";
-	
+	//输出路径
+	const EXPORT_PATH='s3://mob-emr-test/';
+
 	public function actions()
 	{
 		return [
@@ -159,17 +161,19 @@ class LoadController extends Controller
 			Yii::$app->response->format=Response::FORMAT_JSON;
 			if(Yii::$app->request->isAjax)
 			{
-				
+
 				if($model->load($post) && $model->validate())
 				{
+
 					//开始及结束时间转换成Y-m-d H格式
 					$start_date=explode(" ", date("Y-m-d H",strtotime($post['Load']['start_time'])));
 					$start_time=$start_date[0].'-'.$start_date[1];
 					$end_date=explode(" ", date("Y-m-d H",strtotime($post['Load']['end_time'])));
 					$end_time=$end_date[0].'-'.$end_date[1];
 					$export_type=($post['Load']['export_type'])?"json":"csv";
+					$post['Load']['export_path']=$export_path=self::EXPORT_PATH.trim($post['Load']['export_path']);
 
-					if($destination=$this->toTxt($source,$start_time,$end_time,$uuids,$networks,$clickids,$idfas,$export_type))
+					if($destination=$this->toTxt($export_path,$source,$start_time,$end_time,$uuids,$networks,$clickids,$idfas,$export_type))
 					{	
 					
 						$destination1=$destination.'/start.job';
@@ -329,7 +333,7 @@ class LoadController extends Controller
 	*生成txt文件
 	*return 生成文件目录路径;
 	*/
-	protected function toTxt($source='',$start_time,$end_time,$uuids='',$networks='',$clickids='',$idfas='',$export_type)
+	protected function toTxt($export_path,$source='',$start_time,$end_time,$uuids='',$networks='',$clickids='',$idfas='',$export_type)
 	{	
 		$dir_name=date('Y-m-d-H-i-s',time());
 		//创建文件夹
@@ -341,19 +345,19 @@ class LoadController extends Controller
 $txt=<<<txt
 #!/usr/bin/sh
 #MR
-HDFS_JSON="s3://mob-emr-test/huiyong.wang/wk_in/json.jar"
+hadoop="hadoop"
+jar_path="./uuid.channel.subid.ip.count.jar"
+HDFS_OUT_PATH="$export_path"
 SOURCE="$source"
-STARTDATE="$start_time"
-ENDDATE="$end_time"
 UUIDS="$uuids"
 CHANNELS="$networks"
 CLICKIDS="$clickids"
 IDFAS="$idfas"
-EXPORTTYPE="$export_type"
 STARTDATE="$start_time"
 ENDDATE="$end_time"
-hadoop jar  uuid.channel.subid.ip.count.jar \${HDFS_JSON} \${SOURCE} \${UUIDS} \${CHANNELS} \${CLICKIDS} \${IDFAS} \${STARTDATE} \${ENDDATE} \${EXPORTTYPE}
-echo "INSTALL DONE"
+hadoop jar  uuid.channel.subid.ip.count.jar \${HDFS_OUT_PATH} \${SOURCE} \${UUIDS} \${CHANNELS} \${CLICKIDS} \${IDFAS} \${STARTDATE} \${ENDDATE}
+
+echo "DONE"
 txt;
 		//$txt=
 

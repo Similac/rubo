@@ -23,7 +23,8 @@
         "nkovacs/yii2-datetimepicker": "*",
         "guzzlehttp/guzzle": "~6.0",
         "moonlandsoft/yii2-phpexcel": "*",
-        "faryshta/yii2-jquery-tagsinput": "*"
+        "faryshta/yii2-jquery-tagsinput": "*",
+        "aws/aws-sdk-php": "*"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",

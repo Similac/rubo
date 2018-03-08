@@ -46,13 +46,18 @@ $config = [
                 ],
             ],
         ],
+        'aws' => [
+            'class' => 'app\components\aws\Connection',
+            'accessKeyId' => '',
+            'secretAccessKey' => ''
+        ],
         'db' => require(__DIR__ . '/db.php'),
         //连接2个不同的数据库
         'remote_db' => require(__DIR__ . '/remote_db.php'),
         
         'urlManager' => [             
-            'enablePrettyUrl' => true,
-            'showScriptName' => true, 
+            'enablePrettyUrl' => false,
+            'showScriptName' => false,
             'rules' => [              
             ],                        
         ],
@@ -62,7 +67,7 @@ $config = [
     //添加设置语言中文
     'language'=>'zh-CN',
     //设置时区
-    'timezone'=>'asia/shanghai',
+    'timezone'=>'Asia/Shanghai',
     'defaultRoute' => 'load/index',
 ];
 
@@ -72,7 +77,7 @@ if (YII_ENV_DEV) {
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
+        'allowedIPs' => ['*','127.0.0.1', '::1'],
     ];
 
     $config['bootstrap'][] = 'gii';

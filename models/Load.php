@@ -17,7 +17,7 @@ class Load extends ActiveRecord
 	{
 		return [
 
-			[['source','start_time','end_time','export_type'],'required'],
+			[['source','start_time','end_time','export_type','export_path'],'required'],
 			['end_time', 'compare', 'compareAttribute'=>'start_time', 'operator' => '>'],
 			//[['uuid','clickid'],'match','pattern'=>'/\,/i','message'=>'uuid必须以,隔开'],
 			//[['network'],'match','pattern'=>'/\,/i','message'=>'渠道必须以,隔开'],
@@ -106,7 +106,8 @@ class Load extends ActiveRecord
 			'clickid'=>'clickid',
 			'match_type'=>'匹配类型',
 			'idfa'=>'idfa',
-			'export_type'=>'输出类型'
+			'export_type'=>'输出类型',
+			'export_path'=>'输出路径'
 		];
 	}
 

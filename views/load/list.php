@@ -42,7 +42,7 @@ AppAsset::register($this);
             <th>project_name</th>
             <th>project_id</th>
             <th>execute_id</th>
-            <th>下载链接</th>
+            <th>下载路径</th>
             <th>操作</th>
           </tr>
           <?php foreach($model as $data):?>
@@ -88,7 +88,7 @@ AppAsset::register($this);
             <td><span class="label label-primary"><?php echo $data->project_name;?></span></td>
             <td><span class="label label-primary"><?php echo $data->project_id;?></span></td>
             <td><span class="label label-primary"><?php echo $data->execute_id;?></span></td>
-            <td><a href='https://www.baidu.com/<?php echo $data->id ?>'>https://www.baidu.com</a></td>
+            <td><?php echo $data->export_path;?></td>
             <td>
               
               <div class="btn-group">

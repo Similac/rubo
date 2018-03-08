@@ -3,6 +3,7 @@ namespace app\models;
 
 use yii\db\ActiveRecord;
 use Yii;
+use app\models\Campaign;
  class Redshift extends ActiveRecord
  {
  	public $start_time;
@@ -10,6 +11,7 @@ use Yii;
  	public $uuid;
  	public $network;
  	public $advertiser;
+    public $upload_file;
 
  	public static function getDb()
     {
@@ -25,8 +27,11 @@ use Yii;
     public function rules()
     {	
     	return [
-    		[['start_time','end_time','export_type'],'required'],
+    		[['start_time','end_time',],'required'],
+            [['upload_file'], 'file', 'skipOnEmpty' => false],
+            [['upload_file'], 'file', 'extensions' => 'csv, xlsx,xls'],
 	    	['end_time', 'compare', 'compareAttribute'=>'start_time', 'operator' => '>'],
+            
     	];
     	
     }
@@ -39,6 +44,12 @@ use Yii;
     		'uuid'=>'offer uuid',
     		'network'=>'渠道名称',
     		'advertiser'=>'广告主',
+            'upload_file'=>'上传文件'
     	];
+    }
+
+    public function getCampaigns()
+    {
+        return $this->hasOne(Campaign::className(),['id'=>'uuid']);
     }
  }
