@@ -1,6 +1,10 @@
 <?php
 namespace app\controllers;
 
+use app\models\S3FIle;
+use Aws\Api\DateTimeResult;
+use Aws\AwsClient;
+use Aws\Sdk;
 use yii\web\Controller;
 use app\models\Load;
 use Yii;
@@ -10,7 +14,7 @@ use yii\bootstrap\ActiveForm;
 use ZipArchive;
 use yii\helpers\Url;
 class LoadController extends Controller
-{	
+{
 	/*zip文件根目录*/
 	const ZIP_ROOT=__DIR__.'/../views/package/';
 	/*job必须文件1*/
@@ -24,7 +28,9 @@ class LoadController extends Controller
 	const SUCCESS_IMG="/basic/web/static/img/weiwei.jpg";
 	const ERROR_IMG="/basic/web/static/img/jinjian.jpg";
 	//输出路径
-	const EXPORT_PATH='s3://mob-emr-test/';
+	protected $prePath = "test/log/";
+
+	protected $bucket = "mob-export-log-support";
 
 	public function actions()
 	{
@@ -346,8 +352,9 @@ $txt=<<<txt
 #!/usr/bin/sh
 #MR
 hadoop="hadoop"
+EXTIONID=`printf \$PWD | awk -F '/' '{printf \$NF}'`
 jar_path="./uuid.channel.subid.ip.count.jar"
-HDFS_OUT_PATH="$export_path"
+HDFS_OUT_PATH="s3://mob-export-log-support/test/log/\${EXTIONID}/"
 SOURCE="$source"
 UUIDS="$uuids"
 CHANNELS="$networks"
@@ -521,4 +528,47 @@ txt;
 		return ['status'=>0,'msg'=>$this->toArray($result)['error'],'img'=>self::ERROR_IMG];
 		
 	}
+
+	public function actionDown(){
+
+	    $files = array();
+
+	    if(Yii::$app->request->isGet){
+
+	        $get = Yii::$app->request->get();
+	        $execute_id = $get['execute_id'];
+
+	        $aws = Yii::$app->aws->getClient();
+
+            $s3 = $aws->createS3([
+                'Bucket' => 'mob-export-log-support',
+                'endpoint'=>'https://s3-external-1.amazonaws.com',
+            ]);
+
+            $objects = ($s3->listObjects([
+                'Bucket' => $this->bucket,
+                'Prefix' => "test/log/$execute_id/",
+            ]));
+            if($objects['Contents'] != null){
+
+                foreach ($objects['Contents'] as $file){
+                    $s3File = new S3FIle();
+                    $s3File->key = $file['Key'];
+                    $s3File->size = $file['Size'];
+                    $s3File->date = $file['LastModified']->format(\DateTime::ISO8601);
+                    $args = [
+                        'Bucket' => $this->bucket,
+                        'Key' => $s3File->key,
+                        'ResponseContentType' => 'application/octet-stream'
+                    ];
+                    $cmd = $s3->getCommand('GetObject',$args);
+                    $s3File->url = $s3->createPresignedRequest($cmd,'+1 minutes')->getUri()."\n";
+                    $files[] = $s3File;
+                }
+            }
+        }
+
+	    return $this->render('down',['files'=>$files]);
+
+    }
 }

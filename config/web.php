@@ -47,9 +47,9 @@ $config = [
             ],
         ],
         'aws' => [
-            'class' => 'app\components\aws\Connection',
-            'accessKeyId' => '',
-            'secretAccessKey' => ''
+            'class' => 'app\components\Aws',
+            'accessKeyId' => 'AKIAILWFAYXTE72526SA',
+            'secretAccessKey' => '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',
         ],
         'db' => require(__DIR__ . '/db.php'),
         //连接2个不同的数据库
