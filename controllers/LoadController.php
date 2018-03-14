@@ -27,7 +27,7 @@ class LoadController extends Controller
 	const CONTENT_TYPE2="multipart/mixed";
 	const SUCCESS_IMG="/basic/web/static/img/weiwei.jpg";
 	const ERROR_IMG="/basic/web/static/img/jinjian.jpg";
-	//输出路径
+
 	protected $prePath = "test/log/";
 
 	protected $bucket = "mob-export-log-support";
@@ -177,9 +177,9 @@ class LoadController extends Controller
 					$end_date=explode(" ", date("Y-m-d H",strtotime($post['Load']['end_time'])));
 					$end_time=$end_date[0].'-'.$end_date[1];
 					$export_type=($post['Load']['export_type'])?"json":"csv";
-					$post['Load']['export_path']=$export_path=self::EXPORT_PATH.trim($post['Load']['export_path']);
 
-					if($destination=$this->toTxt($export_path,$source,$start_time,$end_time,$uuids,$networks,$clickids,$idfas,$export_type))
+
+					if($destination=$this->toTxt($source,$start_time,$end_time,$uuids,$networks,$clickids,$idfas,$export_type))
 					{	
 					
 						$destination1=$destination.'/start.job';
@@ -243,7 +243,8 @@ class LoadController extends Controller
 																	$post['Load']['created_at']=time();
 					 	    										$post['Load']['clickid']=empty($post['Load']['clickid'])?0:count(explode("\r\n", trim($post['Load']['clickid'])));
 																	$post['Load']['idfa']=empty($post['Load']['idfa'])?0:count(explode("\r\n", trim($post['Load']['idfa'])));
-														        	if($model->load($post)&&$model->create())
+														        	$post['Load']['export_path']='xxx';
+																	if($model->load($post)&&$model->create())
 														        	{
 														        		return ['status'=>1,'msg'=>'操作成功'];
 														        	}
@@ -339,7 +340,7 @@ class LoadController extends Controller
 	*生成txt文件
 	*return 生成文件目录路径;
 	*/
-	protected function toTxt($export_path,$source='',$start_time,$end_time,$uuids='',$networks='',$clickids='',$idfas='',$export_type)
+	protected function toTxt($source='',$start_time,$end_time,$uuids='',$networks='',$clickids='',$idfas='',$export_type)
 	{	
 		$dir_name=date('Y-m-d-H-i-s',time());
 		//创建文件夹
@@ -561,6 +562,7 @@ txt;
                         'Key' => $s3File->key,
                         'ResponseContentType' => 'application/octet-stream'
                     ];
+
                     $cmd = $s3->getCommand('GetObject',$args);
                     $s3File->url = $s3->createPresignedRequest($cmd,'+1 minutes')->getUri()."\n";
                     $files[] = $s3File;
