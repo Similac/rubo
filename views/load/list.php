@@ -39,9 +39,6 @@ AppAsset::register($this);
             <th>idfa数目</th>
             <th>输出类型</th>
             <th>创建时间</th>
-            <th>project_name</th>
-            <th>project_id</th>
-            <th>execute_id</th>
             <th>操作</th>
           </tr>
           <?php foreach($model as $data):?>
@@ -84,9 +81,6 @@ AppAsset::register($this);
             <td><span class="label label-primary">json</span></td>
             <?php endif;?>
             <td><span class="label label-success"><?php echo date("Y-m-d H:i:s",$data->created_at)?></span></td>
-            <td><span class="label label-primary"><?php echo $data->project_name;?></span></td>
-            <td><span class="label label-primary"><?php echo $data->project_id;?></span></td>
-            <td><span class="label label-primary"><?php echo $data->execute_id;?></span></td>
 
             <td>
               

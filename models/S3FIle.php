@@ -21,14 +21,4 @@ class S3FIle extends Model
     public $bucket = 'mob-export-log-support';
 
 
-    public function load($data, $formName = null)
-    {
-        if(!is_array($data)){
-            return false;
-        }
-
-    }
-
-
-
 }
