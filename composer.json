@@ -24,7 +24,10 @@
         "guzzlehttp/guzzle": "~6.0",
         "moonlandsoft/yii2-phpexcel": "*",
         "faryshta/yii2-jquery-tagsinput": "*",
-        "aws/aws-sdk-php": "*"
+        "aws/aws-sdk-php": "*",
+        "life2016/yii2-tagsinput": "^1.1",
+        "johnnylei/csv": "^1.1",
+        "moonlandsoft/bootui-typeahead": "*"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",
