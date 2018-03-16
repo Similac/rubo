@@ -5,6 +5,7 @@ use yii\bootstrap\ActiveForm;
 use yii\helpers\Html;
 use kartik\datetime\DateTimePicker;
 use yii\helpers\Url;
+use bootui\typeahead\Typeahead;
 AppAsset::register($this);
 
 ?>
@@ -30,62 +31,71 @@ AppAsset::register($this);
               'labelOptions'=>['class'=>'col-sm-2 control-label']
             ]
         ]);?>
-          <div class="box-body">
+        <div class="box-body">
 
-            <div class="form-group">
- 
-              <?= $form->field($model, 'start_time')->widget(DateTimePicker::classname(), [
-                   'options' => ['placeholder' => '每天的开始时间为00:00'],
-                   'pluginOptions' => [
-                       'format' => 'yyyy-mm-dd hh:ii',
-                       'startDate' => '01-Mar-2014 12:00 AM',
-                       'todayHighlight' => true,
-                       'autoclose'=>true,
-                       //'todayBtn'=>true,
-                       'minuteStep'=>60
-                     ]
-               ]);
-              ?>
-            </div>
+          <div class="form-group">
 
-            <div class="form-group">
-              <?= $form->field($model, 'end_time')->widget(DateTimePicker::classname(), [
-                   'options' => ['placeholder' => '每天的结束时间为23:00'],
-                   'pluginOptions' => [
-                       'format' => 'yyyy-mm-dd hh:ii',
-                       'startDate' => '01-Mar-2014 12:00 AM',
-                       'todayHighlight' => true,
-                       'autoclose'=>true,
-                       //'todayBtn'=>true,
-                       'minuteStep'=>60,
-                     ]
-               ]);
-              ?>
-              
-            </div>
+            <?= $form->field($model, 'start_time')->widget(DateTimePicker::classname(), [
+                 'options' => ['placeholder' => '每天的开始时间为00:00'],
+                 'pluginOptions' => [
+                     'format' => 'yyyy-mm-dd hh:ii',
+                     'startDate' => '01-Mar-2014 12:00 AM',
+                     'todayHighlight' => true,
+                     'autoclose'=>true,
+                     //'todayBtn'=>true,
+                     'minuteStep'=>60
+                   ]
+             ]);
+            ?>
+          </div>
+          
+          <div class="form-group">
+            <?= $form->field($model, 'end_time')->widget(DateTimePicker::classname(), [
+                 'options' => ['placeholder' => '每天的结束时间为23:00'],
+                 'pluginOptions' => [
+                     'format' => 'yyyy-mm-dd hh:ii',
+                     'startDate' => '01-Mar-2014 12:00 AM',
+                     'todayHighlight' => true,
+                     'autoclose'=>true,
+                     //'todayBtn'=>true,
+                     'minuteStep'=>60,
+                   ]
+             ]);
+            ?>
             
-            <div class="form-group">
-              <?= $form->field($model,'advertiser')->textInput([
-                'class'=>'form-control',
-                'placeholder'=>'输入广告主名称,区分大小写',
-                'id'=>'uuid'
-              ])?>     
-            </div>
-            
-            <div class="form-group">
-              <?= $form->field($model,'upload_file')->fileInput()?>
-            </div>
+          </div>
 
-            <div class="form-group">
-              <?= $form->field($model,'clickid_column')->textInput()?>
-            </div>
-          <div class="box-footer">
+          <div class="form-group">
+            <?= $form->field($model, 'advertiser')
+              ->widget(Typeahead::className(),[
+                      'source' => $advertisers, 
+                      'limit' => 10, 
+                      'scrollable' => true,
+                      //'addon' => ['prepend' => 'Autocomplete'],
+            ]) ?>
+          </div>
+          
+          <div class="form-group">
+            <?= $form->field($model,'upload_file')->fileInput()?>
+          </div>
+          
+          <div class="form-group">
+            <?= $form->field($model,'match_type')->inline()->radiolist([
+              0=>'clickid',
+              1=>'devid'
+            ])?>
+          </div>
+
+          <div class="form-group">
+            <?= $form->field($model,'clickid_column')->textInput()?>
+          </div>
+        <div class="box-footer">
             
             <?= Html::submitButton('提交',[
               'class'=>'btn btn-primary center-block',
               'id'=>'btn'
             ])?>
-          </div><!-- /.box-footer -->
+        </div><!-- /.box-footer -->
 
         <?php ActiveForm::end();?>
       </div><!-- /.box -->
@@ -148,7 +158,6 @@ $js=<<<js
 //     }); 
 //     return false; 
 //   }); 
-
 
 js;
 $this->registerJs($js); 
