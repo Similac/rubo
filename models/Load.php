@@ -18,7 +18,7 @@ class Load extends ActiveRecord
 		return [
 
 			[['source','start_time','end_time','export_type'],'required'],
-			['end_time', 'compare', 'compareAttribute'=>'start_time', 'operator' => '>'],
+			['end_time', 'compare', 'compareAttribute'=>'start_time', 'operator' => '>='],
 			//[['uuid','clickid'],'match','pattern'=>'/\,/i','message'=>'uuid必须以,隔开'],
 			//[['network'],'match','pattern'=>'/\,/i','message'=>'渠道必须以,隔开'],
 			//[['uuid','network'],'validateEmpty','skipOnEmpty' => false, 'skipOnError' => false],
