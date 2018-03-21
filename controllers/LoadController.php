@@ -1,6 +1,10 @@
 <?php
 namespace app\controllers;
 
+use app\models\S3FIle;
+use Aws\Api\DateTimeResult;
+use Aws\AwsClient;
+use Aws\Sdk;
 use yii\web\Controller;
 use app\models\Load;
 use Yii;
@@ -10,7 +14,7 @@ use yii\bootstrap\ActiveForm;
 use ZipArchive;
 use yii\helpers\Url;
 class LoadController extends Controller
-{	
+{
 	/*zip文件根目录*/
 	const ZIP_ROOT=__DIR__.'/../views/package/';
 	/*job必须文件1*/
@@ -23,8 +27,10 @@ class LoadController extends Controller
 	const CONTENT_TYPE2="multipart/mixed";
 	const SUCCESS_IMG="/basic/web/static/img/weiwei.jpg";
 	const ERROR_IMG="/basic/web/static/img/jinjian.jpg";
-	//输出路径
-	const EXPORT_PATH='s3://mob-emr-test/';
+
+	protected $prePath = "test/log/";
+
+	protected $bucket = "mob-export-log-support";
 
 	public function actions()
 	{
@@ -171,9 +177,9 @@ class LoadController extends Controller
 					$end_date=explode(" ", date("Y-m-d H",strtotime($post['Load']['end_time'])));
 					$end_time=$end_date[0].'-'.$end_date[1];
 					$export_type=($post['Load']['export_type'])?"json":"csv";
-					$post['Load']['export_path']=$export_path=self::EXPORT_PATH.trim($post['Load']['export_path']);
 
-					if($destination=$this->toTxt($export_path,$source,$start_time,$end_time,$uuids,$networks,$clickids,$idfas,$export_type))
+
+					if($destination=$this->toTxt($source,$start_time,$end_time,$uuids,$networks,$clickids,$idfas,$export_type))
 					{	
 					
 						$destination1=$destination.'/start.job';
@@ -237,7 +243,8 @@ class LoadController extends Controller
 																	$post['Load']['created_at']=time();
 					 	    										$post['Load']['clickid']=empty($post['Load']['clickid'])?0:count(explode("\r\n", trim($post['Load']['clickid'])));
 																	$post['Load']['idfa']=empty($post['Load']['idfa'])?0:count(explode("\r\n", trim($post['Load']['idfa'])));
-														        	if($model->load($post)&&$model->create())
+														        	$post['Load']['export_path']='xxx';
+																	if($model->load($post)&&$model->create())
 														        	{
 														        		return ['status'=>1,'msg'=>'操作成功'];
 														        	}
@@ -333,7 +340,7 @@ class LoadController extends Controller
 	*生成txt文件
 	*return 生成文件目录路径;
 	*/
-	protected function toTxt($export_path,$source='',$start_time,$end_time,$uuids='',$networks='',$clickids='',$idfas='',$export_type)
+	protected function toTxt($source='',$start_time,$end_time,$uuids='',$networks='',$clickids='',$idfas='',$export_type)
 	{	
 		$dir_name=date('Y-m-d-H-i-s',time());
 		//创建文件夹
@@ -346,8 +353,9 @@ $txt=<<<txt
 #!/usr/bin/sh
 #MR
 hadoop="hadoop"
+EXTIONID=`printf \$PWD | awk -F '/' '{printf \$NF}'`
 jar_path="./uuid.channel.subid.ip.count.jar"
-HDFS_OUT_PATH="$export_path"
+HDFS_OUT_PATH="s3://mob-export-log-support/test/log/\${EXTIONID}/"
 SOURCE="$source"
 UUIDS="$uuids"
 CHANNELS="$networks"
@@ -521,4 +529,48 @@ txt;
 		return ['status'=>0,'msg'=>$this->toArray($result)['error'],'img'=>self::ERROR_IMG];
 		
 	}
+
+	public function actionDown(){
+
+	    $files = array();
+
+	    if(Yii::$app->request->isGet){
+
+	        $get = Yii::$app->request->get();
+	        $execute_id = $get['execute_id'];
+
+	        $aws = Yii::$app->aws->getClient();
+
+            $s3 = $aws->createS3([
+                'Bucket' => 'mob-export-log-support',
+                'endpoint'=>'https://s3-external-1.amazonaws.com',
+            ]);
+
+            $objects = ($s3->listObjects([
+                'Bucket' => $this->bucket,
+                'Prefix' => "test/log/$execute_id/",
+            ]));
+            if($objects['Contents'] != null){
+
+                foreach ($objects['Contents'] as $file){
+                    $s3File = new S3FIle();
+                    $s3File->key = $file['Key'];
+                    $s3File->size = $file['Size'];
+                    $s3File->date = $file['LastModified']->format(\DateTime::ISO8601);
+                    $args = [
+                        'Bucket' => $this->bucket,
+                        'Key' => $s3File->key,
+                        'ResponseContentType' => 'application/octet-stream'
+                    ];
+
+                    $cmd = $s3->getCommand('GetObject',$args);
+                    $s3File->url = $s3->createPresignedRequest($cmd,'+1 minutes')->getUri()."\n";
+                    $files[] = $s3File;
+                }
+            }
+        }
+
+	    return $this->render('down',['files'=>$files]);
+
+    }
 }

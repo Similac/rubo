@@ -181,15 +181,7 @@ AppAsset::register($this);
                 ]);
               ?>
           </div>
-          <div class="form-group">
-            <?= $form->field($model, 'export_path', [
-              'inputTemplate' => '<div class="input-group"><span class="input-group-addon">s3://mob-emr-test/</span>{input}</div>',
-              'inputOptions' => [
-                   'placeholder' =>'输入路径前请确定s3://mob-emr-test/下已有自己的文件夹'
-               ],
-            ])?>
 
-          </div>
           <?php if(!isset($model->created_at)):?>
           <div class="box-footer">
             

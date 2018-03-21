@@ -32,7 +32,12 @@ return [
                 'domain' => 'localhost',
             ],
             */
-        ],        
+        ],
+        'aws' => [
+            'class' => 'app\components\aws\Connection',
+            'accessKeyId' => 'AKIAILWFAYXTE72526SA',
+            'secretAccessKey' => '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'
+        ],
     ],
     'params' => $params,
 ];

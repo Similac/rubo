@@ -10,6 +10,7 @@ class Deducted extends Model
  	public $advertiser;
     public $upload_file;
     public $clickid_column;
+    public $match_type;
 
     public function rules()
     {	
@@ -40,7 +41,8 @@ class Deducted extends Model
     		'end_time'=>'结束时间',
     		'advertiser'=>'广告主',
             'upload_file'=>'上传文件',
-            'clickid_column'=>'clickid所在列名'
+            'clickid_column'=>'clickid或devid所在列名',
+            'match_type'=>'匹配类型'
     	];
     }
 

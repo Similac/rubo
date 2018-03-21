@@ -17,16 +17,16 @@ class Load extends ActiveRecord
 	{
 		return [
 
-			[['source','start_time','end_time','export_type','export_path'],'required'],
-			['end_time', 'compare', 'compareAttribute'=>'start_time', 'operator' => '>'],
+			[['source','start_time','end_time','export_type'],'required'],
+			['end_time', 'compare', 'compareAttribute'=>'start_time', 'operator' => '>='],
 			//[['uuid','clickid'],'match','pattern'=>'/\,/i','message'=>'uuid必须以,隔开'],
 			//[['network'],'match','pattern'=>'/\,/i','message'=>'渠道必须以,隔开'],
 			//[['uuid','network'],'validateEmpty','skipOnEmpty' => false, 'skipOnError' => false],
 			['clickid','requiredByMatch_type1','skipOnEmpty' => false, 'skipOnError' => false],
 			['idfa','requiredByMatch_type2','skipOnEmpty' => false, 'skipOnError' => false],
 			
-			[['uuid','network','match_type','clickid','idfa','project_name','created_at','project_id','execute_id'],'safe'],
-			
+			[['uuid','network','match_type','clickid','idfa','project_name','created_at','project_id','execute_id','export_path'],'safe'],
+
 		];
 	}
 

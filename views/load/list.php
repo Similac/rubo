@@ -28,8 +28,8 @@ AppAsset::register($this);
       <div class="box-body table-responsive no-padding">
         <table class="table table-hover" style="border-collapse:separate; border-spacing:0px 20px;">
           <tr>
-            <th>ID</th>
-            <th>数据源</th>
+              <th>id</th>
+              <th>source</th>
             <th>开始时间</th>
             <th>结束时间</th>
             <th>uuid</th>
@@ -39,10 +39,6 @@ AppAsset::register($this);
             <th>idfa数目</th>
             <th>输出类型</th>
             <th>创建时间</th>
-            <th>project_name</th>
-            <th>project_id</th>
-            <th>execute_id</th>
-            <th>下载路径</th>
             <th>操作</th>
           </tr>
           <?php foreach($model as $data):?>
@@ -85,19 +81,18 @@ AppAsset::register($this);
             <td><span class="label label-primary">json</span></td>
             <?php endif;?>
             <td><span class="label label-success"><?php echo date("Y-m-d H:i:s",$data->created_at)?></span></td>
-            <td><span class="label label-primary"><?php echo $data->project_name;?></span></td>
-            <td><span class="label label-primary"><?php echo $data->project_id;?></span></td>
-            <td><span class="label label-primary"><?php echo $data->execute_id;?></span></td>
-            <td><?php echo $data->export_path;?></td>
+
             <td>
               
               <div class="btn-group">
                 <button data-toggle="dropdown" class="btn btn-default dropdown-toggle">Action<span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu pull-right">
-                    <li><a href='<?php echo Url::to(["load/index","id"=>$data->id])?>' class="font-bold">任务详情</a>
+                    <li><a href='<?php echo Url::to(["load/index","id"=>$data->id])?>' class="font-bold" target="_blank">任务详情</a>
                     </li>
-                    <li><a href='<?php echo Url::to(["load/progress",'execute_id'=>$data->execute_id])?>'>查看进度</a>
+                    <li><a href='<?php echo Url::to(["load/progress",'execute_id'=>$data->execute_id])?>' target="_blank">查看进度</a>
+                    </li>
+                    <li><a href='<?php echo Url::to(["load/down",'execute_id'=>$data->execute_id])?>'target="_blank">下载</a>
                     </li>
                 </ul>
               </div>
