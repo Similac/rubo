@@ -9,58 +9,195 @@ use app\models\Deducted;
 use yii\web\UploadedFile;
 use johnnylei\csv\TheCsv;
 use app\models\Advertiser;
-
+use yii\web\Response;
+use yii\bootstrap\ActiveForm;
 class RedshiftController extends Controller
 {   
     //上传文件路径
     const FILE_PATH=__DIR__.'/../web/uploads/';
 
     protected $count="count(*)";
-    protected $contents="trunc( ( TIMESTAMP 'epoch' + (timestamp +(28800)) * INTERVAL '1 Second ' )) AS received_date,
-            test1.timestamp,test2.uuid,test3.network,test1.mb_subid,test1.p3,test1.defraud,test1.mb_af_1";
-    protected $limit="limit 10";
+    protected $content="trunc( ( TIMESTAMP 'epoch' + (timestamp +(28800)) * INTERVAL '1 Second ' )) AS received_date,
+            test1.timestamp as received_timstamp,test2.uuid,test3.network,test1.mb_subid,test1.p3,test1.defraud,test1.mb_af_1";
+
+    public $select=[
+        '(test1.p1-STRTOL (SUBSTRING(p3, 0, 9), 16)) as cti',
+        'test3.manager as manager',
+        'STRTOL (SUBSTRING(p3, 0, 9), 16) as click_timestamp',
+        'test1.p1 as install_timestamp',
+        'test1.ip as click_ip',
+        "trunc((TIMESTAMP 'epoch' + (STRTOL (SUBSTRING(p3, 0, 9), 16) +(28800)) * INTERVAL '1 Second ')) AS click_date",
+        "trunc((TIMESTAMP 'epoch' + (test1.p1 +(28800)) * INTERVAL '1 Second ')) AS install_date",
+    ];
+
+    public $defraud_tag=[
+        '',
+        'and test1.network>0'
+    ];
     //public $layout=false;
+    //表单ajax验证
+    public function actionValidation()
+    {   
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Redshift();   //这里要替换成自己的模型类
+        $model->load(Yii::$app->request->post());  
+        return ActiveForm::validate($model);
+    }
+
     public function actionIndex()
     {	
 
-    	//$model=Redshift::find()->select('timestamp,uuid')->where(['and',['between','timestamp',1514736000,1516550400],['uuid'=>489507],['>','network','0']])->limit(10)->asArray()->all();
-    	// $model=Redshift::findBySql(
-    	//    'select test1.timestamp,test2.uuid from 
-    	// 	mob_install_log test1 
-    	// 	left join mob_camp_info test2 
-    	// 	on test1.uuid=test2.id where time limit 1')->asArray()->all();
         $model= new Redshift();
-        $data='';
-        $start_time='';
-        $end_time='';
-        $uuid='';
-        $count='';
+        $advertisers=Advertiser::find()->all();
+        foreach ($advertisers as $v) {
+            $client[]=$v->adv_name;
+        }
+
         if(Yii::$app->request->isPost)
-        {   
+        {
             $post= Yii::$app->request->post();
-            $uuid=$post['Redshift']['uuid'];
-            
             $start_time=strtotime($post['Redshift']['start_time']);
             $end_time=strtotime($post['Redshift']['end_time']);
-            
-            //$model=Redshift::find()->select('timestamp,uuid')->where(['and',['between','timestamp',1514736000,1516550400],['uuid'=>489507],['>','network','0']])->limit(10)->asArray()->all();
-            $count=$this->exportTool($start_time,$end_time,$uuid,$this->count);
+            if($model->load($post) && $model->validate())
+            {   
 
-            $data=$this->exportTool($start_time,$end_time,$uuid,$this->contents,$this->limit);
-            
+                //Yii::$app->response->format=Response::FORMAT_JSON;
+                switch ($post['Redshift']['type']) {
+                    case '0':
+                        $post['Redshift']['advertiser']='';
+                        //拼接uuid
+                        $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
+
+                        //判断network是否为空
+                        if ($post['Redshift']['network']) {
+                            $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                        }
+                        else
+                        {
+                            $networks='';
+                        }
+                        
+                        //判断select是都为空
+                        if ($post['Redshift']['select']) {
+                            $select_con='';
+                            foreach ($post['Redshift']['select'] as $v) {
+                                $select_con.=','.$this->select[$v];
+
+                            }
+                            $content=$this->content.$select_con;
+                        }
+                        else
+                        {
+                            $content=$this->content;
+                        }
+
+                        $defraud_tag=$this->defraud_tag[$post['Redshift']['defraud_tag']];
+                        
+                        $data=$this->exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content,$defraud_tag);
+                        if(empty($data))
+                        {
+                            return '数据为空';
+                        }
+                        $keys=array_keys($data[0]);
+                        $column_name=array_combine($keys, $keys);
+                        $file_name=time();
+                        $this->exportCsv($data,$column_name,$file_name);
+                        exit();
+                        break;
+                    case '1':
+                        $post['Redshift']['uuid']='';
+                        $post['Redshift']['network']='';
+                        $advertiser='\''.$post['Redshift']['advertiser'].'\'';
+                        //判断select是都为空
+                        if ($post['Redshift']['select']) {
+                            $select_con='';
+                            foreach ($post['Redshift']['select'] as $v) {
+                                $select_con.=','.$this->select[$v];
+                            }
+                            $content=$this->content.$select_con;
+                        }
+                        else
+                        {
+                            $content=$this->content;
+                        }
+
+                        $defraud_tag=$this->defraud_tag[$post['Redshift']['defraud_tag']];
+
+                        $data=$this->exportbyadvertiserTool($start_time,$end_time,$advertiser,$content,$defraud_tag);
+                        if(empty($data))
+                        {
+                            return '数据为空';
+                        }
+                        $keys=array_keys($data[0]);
+                        $column_name=array_combine($keys, $keys);
+                        $file_name=time();
+                        $this->exportCsv($data,$column_name,$file_name);
+                        exit();
+                        break;
+                    default:
+                        $post['Redshift']['advertiser']='';
+                        //拼接uuid
+                        $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
+
+                        //判断network是否为空
+                        if ($post['Redshift']['network']) {
+                            $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                        }
+                        else
+                        {
+                            $networks='';
+                        }
+                        
+                        //判断select是都为空
+                        if ($post['Redshift']['select']) {
+                            $select_con='';
+                            foreach ($post['Redshift']['select'] as $v) {
+                                $select_con.=','.$this->select[$v];
+
+                            }
+                            $content=$this->content.$select_con;
+                        }
+                        else
+                        {
+                            $content=$this->content;
+                        }
+
+                        $defraud_tag=$this->defraud_tag[$post['Redshift']['defraud_tag']];
+                        
+                        $data=$this->exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content,$defraud_tag);
+                        
+                        $keys=array_keys($data[0]);
+                        $column_name=array_combine($keys, $keys);
+                        $file_name=time();
+                        $this->exportCsv($data,$column_name,$file_name);
+                        exit();
+                        break;
+                }
+            }
         }
-    	//var_dump($model);
-        return $this->render('index',['model'=>$model,'data'=>$data,'start_time'=>$start_time,'end_time'=>$end_time,'uuid'=>$uuid,'count'=>$count]);
+
+        return $this->render('index',['model'=>$model,'advertisers'=>$client]);
     }
 
-    public function exportTool($start_time,$end_time,$uuid,$content,$limit="")
+    public function exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content,$defraud_tag,$limit="")
     {
         $sql="select $content
             from mob_install_log test1
              left join mob_camp_info test2 on test1.uuid=test2.id
              left join channel_map test3 on test1.network=test3.cb
-             where test1.timestamp>$start_time and test1.timestamp<$end_time and test2.uuid in(:uuid) and test1.network>0 $limit";
-            $data=Redshift::findBySql($sql,[':uuid'=>$uuid])->asArray()->all();
+             where test1.timestamp>$start_time and test1.timestamp<$end_time and test2.uuid in($uuids) $networks $defraud_tag";
+        $data=Redshift::findBySql($sql)->asArray()->all();
+        return $data;
+    }
+
+    public function exportbyadvertiserTool($start_time,$end_time,$advertiser,$content,$defraud_tag,$limit="")
+    {
+        $sql="select $content
+            from mob_install_log test1
+             left join mob_camp_info test2 on test1.uuid=test2.id
+             left join channel_map test3 on test1.network=test3.cb
+             where test1.timestamp>$start_time and test1.timestamp<$end_time and test2.adv_name in ($advertiser) $defraud_tag";
+        $data=Redshift::findBySql($sql)->asArray()->all();
         return $data;
     }
 
@@ -91,7 +228,6 @@ class RedshiftController extends Controller
                 'defraud'=>'扣量标记',
                 'mb_af_1'=>'渠道clickid'
             ],
-
         ]);
     }
 
@@ -193,8 +329,6 @@ class RedshiftController extends Controller
 
                 }
                 
-                
-
                 $column=array_keys($rows[0]);
                 $new_column=array_combine($column, $column);
                 // var_dump($rows);
