@@ -51,8 +51,8 @@ AppAsset::register($this);
             </div>
         </div>
         <div id="navbar" class="navbar-collapse collapse" aria-expanded="false" style="height: 1px;">
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href='<?php echo Url::toRoute(['load/index'])?>'>导数据</a></li>
+          <ul class="nav navbar-nav navbar-right pull-left">
+            <li><a href='<?php echo Url::toRoute(['load/index'])?>'>azkaban数据</a></li>
             <li><a href='<?php echo Url::toRoute(['redshift/index'])?>'>redshift数据</a></li>
             <li><a href='<?php echo Url::toRoute(['redshift/deducted'])?>'>匹配扣量</a></li>
             <li><a href='<?php echo Url::toRoute(['load/list'])?>'>查看任务列表</a></li>

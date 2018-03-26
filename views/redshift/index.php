@@ -5,21 +5,27 @@ use yii\bootstrap\ActiveForm;
 use yii\helpers\Html;
 use kartik\datetime\DateTimePicker;
 use yii\helpers\Url;
+use bootui\typeahead\Typeahead;
+use wbraganca\tagsinput\TagsinputWidget;
 AppAsset::register($this);
 
 ?>
-
+<style>
+  .bootstrap-tagsinput
+  {
+    width: 100%;
+  }
+</style>
 <!-- Main content -->
 <section class="content">
   <div class="row">
     <div class="col-md-12">
       <!-- Horizontal Form -->
       <div class="box box-info">
-        
-        <!-- form start -->
-        
+        <!-- form start -->    
         <?php $form=ActiveForm::begin([
-
+            'enableAjaxValidation'=>true,
+            'validationUrl' => Url::to(['redshift/validation']),
             'options'=>[
               'id'=>'loadForm',
               'class'=>'form-horizontal',
@@ -29,124 +35,132 @@ AppAsset::register($this);
               'labelOptions'=>['class'=>'col-sm-2 control-label']
             ]
         ]);?>
-          <div class="box-body">
+        <div class="box-body">
 
             <div class="form-group">
- 
               <?= $form->field($model, 'start_time')->widget(DateTimePicker::classname(), [
-                   'options' => ['placeholder' => '每天的开始时间为00:00'],
                    'pluginOptions' => [
-                       'format' => 'yyyy-mm-dd hh:ii',
-                       'startDate' => '01-Mar-2014 12:00 AM',
-                       'todayHighlight' => true,
-                       'autoclose'=>true,
-                       //'todayBtn'=>true,
-                       'minuteStep'=>60
-                     ]
+                      'format' => 'yyyy-mm-dd hh:ii',
+                      'startDate' => '01-Mar-2014 12:00 AM',
+                      'todayHighlight' => true,
+                      'autoclose'=>true,
+                      //'todayBtn'=>true,
+                      'minuteStep'=>30
+                      //'minView'=>'month'
+                    ]
                ]);
               ?>
             </div>
 
             <div class="form-group">
               <?= $form->field($model, 'end_time')->widget(DateTimePicker::classname(), [
-                   'options' => ['placeholder' => '每天的结束时间为23:00'],
                    'pluginOptions' => [
                        'format' => 'yyyy-mm-dd hh:ii',
                        'startDate' => '01-Mar-2014 12:00 AM',
                        'todayHighlight' => true,
                        'autoclose'=>true,
                        //'todayBtn'=>true,
-                       'minuteStep'=>60,
+                       'minuteStep'=>30,
+                       //'minView'=>'month'
                      ]
                ]);
               ?>
-              
-            </div>
-
-            <div class="form-group">
-              <?= $form->field($model,'uuid')->textInput([
-                'class'=>'form-control',
-                'placeholder'=>'输入uuid换行隔开,uuid和network必须填写其中一个',
-                'id'=>'uuid'
-              ])?>     
             </div>
             
             <div class="form-group">
-              <?= $form->field($model,'network')->textInput([
-                'class'=>'form-control',
-                'placeholder'=>'输入渠道名称换行隔开,uuid和network必须填写其中一个',
-                'id'=>'uuid'
-              ])?>     
+              <?php $model->type=0;?>
+              <?= $form->field($model,'type')->inline()->radioList([
+                '0'=>'uuid维度',
+                '1'=>'advertiser维度'
+              ])?>  
             </div>
-            <div class="form-group">
-              <?= $form->field($model,'advertiser')->textInput([
-                'class'=>'form-control',
-                'placeholder'=>'输入广告主名称换行隔开',
-                'id'=>'uuid'
-              ])?>     
-            </div>
-     
-          <div class="box-footer">
             
-            <?= Html::submitButton('提交',[
-              'class'=>'btn btn-primary center-block',
-              'id'=>'btn'
-            ])?>
-          </div><!-- /.box-footer -->
+            <div class="form-group" id="uuid">
+              <?= $form->field($model, 'uuid')->widget(TagsinputWidget::classname(), [
+                  'clientOptions' => [
+                      'trimValue' => true,
+                      'allowDuplicates' => false
+                  ]
+              ]) ?>   
+            </div>
+            
+            <div class="form-group" id="network">
+              <?= $form->field($model, 'network')->widget(TagsinputWidget::classname(), [
+                  'clientOptions' => [
+                      'trimValue' => true,
+                      'allowDuplicates' => false
+                  ]
+              ]) ?>    
+            </div>
+            
+            <div class="form-group" id="advertiser" style="display:none">
+            <?= $form->field($model, 'advertiser')
+              ->widget(Typeahead::className(),[
+                      'source' => $advertisers, 
+                      'limit' => 10, 
+                      'scrollable' => true,
+                      //'addon' => ['prepend' => 'Autocomplete'],
+            ]) ?>
+            </div>
+            
+            <div class="form-group">
+            <?= $form->field($model, 'select')->inline()->checkboxList([
+              '0'=>'cti',
+              '1'=>'channel_manager',
+              '2'=>'click_timestamp',
+              '3'=>'install_timestamp',
+              '4'=>'click_ip',
+              '5'=>'click_date',
+              '6'=>'install_date',
+            ]);?>
+            </div>
 
+            <div class="form-group">
+            <?php $model->defraud_tag='1';?>
+            <?= $form->field($model, 'defraud_tag')->dropdownList([
+              '0'=>'扣量前',
+              '1'=>'扣量后',
+            ]);?>
+            </div>
+            
+            <div class="box-footer">
+              <?= Html::submitButton('提交',[
+                'class'=>'btn btn-primary center-block',
+                'id'=>'btn'
+              ])?>
+            </div>
+          <!-- /.box-footer -->
         <?php ActiveForm::end();?>
-      </div><!-- /.box -->
-  </div>
-  <div class="box-body table-responsive no-padding">
-    <table class="table table-hover" style="border-collapse:separate; border-spacing:0px 20px;">
-      共有<?php echo isset($count[0]['count'])?$count[0]['count']:'0';?>条数据,只显示10条数据
-      <?php if(!empty($data)):?>
-      <a class="btn btn-primary pull-right" href="<?php echo Url::to(['redshift/export','start_time'=>$start_time,'end_time'=>$end_time,'uuid'=>$uuid],true)?>">导出</a>
-      <?php endif;?>
-      <tr>
-        <th>时间</th>
-        <th>uuid</th>
-        <th>渠道</th>
-        <th>subid</th>
-        <th>clickid</th>
-        <th>扣量</th>
-        <th>渠道clickid</th>
-      </tr>
-      <?php if(!empty($data)):?>
-      <?php foreach ($data as $v):?>
-        <tr>
-          <td><?php echo $v['received_date'];?></td>
-          <td><?php echo $v['uuid'];?></td>
-          <td><?php echo $v['network'];?></td>
-          <td><?php echo $v['mb_subid'];?></td>
-          <td><?php echo $v['p3'];?></td>
-          <td><?php echo $v['defraud'];?></td>
-          <td><?php echo substr($v['mb_af_1'], 0,15).'...';?></td>
-        </tr>
-      <?php endforeach;?>
-      <?php else:?>
-      <tr><td>数据为空</td></tr>
-    <?php endif;?>
-    </table>
-  </div>
+        </div><!-- /.box -->
+      </div>
+    </div>
+  </div>    
 </section>
 <?php
+$uuid=$model->uuid='';
 $js=<<<js
+
+$('input:radio[name="Redshift[type]"]').click(function(){
+  if($(this).val()==1)
+  {
+    $("#uuid").hide();
+    $("#network").hide();
+    $("#advertiser").show();
+
+  }
+  else
+  {
+    $("#advertiser").hide();
+    $("#uuid").show();
+    $("#network").show();
+  }
+})
+
 // $(document).on('beforeSubmit', 'form#loadForm', function () {
-//     // if($("#uuid").val()=='' && $("#network").val()=='')
-//     // {
-//     //   swal({
-//     //         title: '<small style="color:red">uuid和network必须填写其中一个</small>',
-//     //         text: '3秒后自动关闭',
-//     //         //type: 'info',
-//     //         timer:3000,
-//     //       
-//     //       })
-//     //   return false;
-//     // }
+
 //     var form = $(this); 
 //     $('#btn').attr('disabled',"true").text("Loaing....");
-
+    
 //     $.ajax({
 //       url  : form.attr('action'), 
 //       type  : 'post', 
@@ -161,6 +175,7 @@ $js=<<<js
 //             timer:3000,
             
 //           })
+          
           
 //         }
 //         else{
