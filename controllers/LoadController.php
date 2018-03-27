@@ -438,16 +438,17 @@ txt;
 	*/
 	protected function delDir($del_file)
 	{
-		$fp=opendir($del_file);
-		while (($filename=readdir($fp))!==false) 
-		{
-			if($filename!="." && $filename!="..")
-			{
-				unlink($del_file."/$filename");
-			}
-		}
-		closedir( $fp );
-		return rmdir($del_file);
+//		$fp=opendir($del_file);
+//		while (($filename=readdir($fp))!==false)
+//		{
+//			if($filename!="." && $filename!="..")
+//			{
+//				unlink($del_file."/$filename");
+//			}
+//		}
+//		closedir( $fp );
+//		return rmdir($del_file);
+        return true;
 	}
 
 
