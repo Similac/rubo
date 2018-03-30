@@ -56,6 +56,7 @@ AppAsset::register($this);
             <li><a href='<?php echo Url::toRoute(['redshift/index'])?>'>redshift数据</a></li>
             <li><a href='<?php echo Url::toRoute(['redshift/deducted'])?>'>匹配扣量</a></li>
             <li><a href='<?php echo Url::toRoute(['load/list'])?>'>查看任务列表</a></li>
+            <li><a href='<?php echo Url::toRoute(['fix/index'])?>'>补数据</a></li>
           </ul>
         </div>
       </div>
