@@ -32,10 +32,26 @@ AppAsset::register($this);
                   
                         
                 <div class="form-group">
-                 <?= $form->field($model,'advertiser')->textInput([
+                 <?= $form->field($model,'uuid_column')->textInput([
                    'class'=>'form-control',
-                   'placeholder'=>'输入广告主名称,区分大小写',
+                   'placeholder'=>'输入uuid列名',
                    'id'=>'uuid'
+                 ])?>     
+               </div>
+                  
+                <div class="form-group">
+                 <?= $form->field($model,'clickid_column')->textInput([
+                   'class'=>'form-control',
+                   'placeholder'=>'输入clickid列名',
+                   'id'=>'clickid'
+                 ])?>     
+               </div>
+                  
+                <div class="form-group">
+                 <?= $form->field($model,'operator')->textInput([
+                   'class'=>'form-control',
+                   'placeholder'=>'输入你的英文名字',
+                   'id'=>'operator'
                  ])?>     
                </div>
 
