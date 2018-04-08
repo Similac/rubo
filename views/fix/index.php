@@ -72,5 +72,21 @@ AppAsset::register($this);
             </div>
        </div>
   </div>
-</section>         
-          
+</section>  
+<?php
+
+$flashes = Yii::$app->getSession()->getAllFlashes();
+foreach($flashes as $k=>$v){
+    $err .= $v."</br>";
+}
+if(isset($err)){
+$err = substr($err, 0, -5);
+$js=<<<JS
+   $(function(){
+       swal("","{$err}");
+   });
+JS;
+$this->registerJs($js);    
+}
+
+?>
