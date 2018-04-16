@@ -32,7 +32,7 @@ class User extends /*\yii\base\Object*/ \yii\db\ActiveRecord implements \yii\web
      */
     public static function tableName()
     {
-        return '{{%admin}}';
+        return '{{%user}}';
     }
 
     /**

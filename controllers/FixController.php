@@ -11,7 +11,7 @@ use app\models\Advertiser;
 use yii\web\Response;
 use yii\bootstrap\ActiveForm;
 
-class FixController extends Controller
+class FixController extends CommonController
 {
     //上传文件路径
     const FILE_PATH=__DIR__.'/../web/uploads/';
