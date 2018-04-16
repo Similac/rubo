@@ -11,7 +11,7 @@ use johnnylei\csv\TheCsv;
 use app\models\Advertiser;
 use yii\web\Response;
 use yii\bootstrap\ActiveForm;
-class RedshiftController extends Controller
+class RedshiftController extends CommonController
 {   
     //上传文件路径
     const FILE_PATH=__DIR__.'/../web/uploads/';
