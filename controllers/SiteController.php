@@ -69,6 +69,9 @@ class SiteController extends Controller{
                 http_build_query($post_data))
             ->post($token_url);
         
+        
+        
+        
         if(isset($res['access_token']) && !empty($res['access_token'])){
             $params = array();
             $params['access_token'] = $res['access_token'];
