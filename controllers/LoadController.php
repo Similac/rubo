@@ -13,7 +13,7 @@ use yii\data\Pagination;
 use yii\bootstrap\ActiveForm;
 use ZipArchive;
 use yii\helpers\Url;
-class LoadController extends Controller
+class LoadController extends CommonController
 {
 	/*zip文件根目录*/
 	const ZIP_ROOT=__DIR__.'/../views/package/';
