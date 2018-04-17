@@ -85,7 +85,6 @@ class SiteController extends Controller{
             echo curl_error($curl);
             exit;
         }
-        
         if(isset($res['access_token']) && !empty($res['access_token'])){
             $params = array();
             $params['access_token'] = $res['access_token'];
@@ -104,6 +103,8 @@ class SiteController extends Controller{
             $session = \Yii::$app->session;
             $session->set('user',$user);
             $this->goHome();
+        }else{
+            var_dump($res);exit;
         }
         
     }
