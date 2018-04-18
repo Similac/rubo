@@ -68,7 +68,7 @@ AppAsset::register($this);
                 <li class="user-body">
                   <div class="slimScrollDiv" style="position: relative; overflow: hidden; width: auto; height: 50px;">
                       <ul class="menu" style="overflow: hidden; width: 100%; height: 50px;">
-                          <li><a href="/index.php?r=site%2Flogout" data-method="post"></i> 退出</a></li>
+                          <li><a href="/index.php?r=site%2Flogout"></i> 退出</a></li>
                       </ul>
                   </div>
                 </li>
