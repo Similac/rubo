@@ -21,7 +21,7 @@ AppAsset::register($this);
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>导数据</title>
+    <title>导数工据</title>
     
     <!-- Bootstrap core CSS -->
     <style>
@@ -58,7 +58,27 @@ AppAsset::register($this);
             <li><a href='<?php echo Url::toRoute(['load/list'])?>'>查看任务列表</a></li>
             <li><a href='<?php echo Url::toRoute(['fix/index'])?>'>补数据</a></li>
           </ul>
+          <ul class="nav navbar-nav pull-right" style="margin-right:60px;">
+            <li class="dropdown user-menu notifications-menu">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                <span class="glyphicon glyphicon-user" style="font-size: 16px" alt="User Image"></span>
+                <span class="hidden-xs"><?=Yii::$app->session['user']['username']?>&nbsp;&nbsp;</span>
+              </a>
+                <ul class="dropdown-menu" style="width:160px;">
+                <li class="user-body">
+                  <div class="slimScrollDiv" style="position: relative; overflow: hidden; width: auto; height: 50px;">
+                      <ul class="menu" style="overflow: hidden; width: 100%; height: 50px;">
+                          <li><a href="/index.php?r=site%2Flogout" data-method="post"></i> 退出</a></li>
+                      </ul>
+                  </div>
+                </li>
+              </ul>
+            </li>
+         </ul>
+            
         </div>
+       
+          
       </div>
     </nav>
     <hr>

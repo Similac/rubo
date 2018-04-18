@@ -68,23 +68,6 @@ class SiteController extends Controller{
                 CURLOPT_POSTFIELDS, 
                 http_build_query($post_data))
             ->post($token_url);
-//        $curl = curl_init();
-//        curl_setopt($curl, CURLOPT_URL, $token_url);
-//        curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)');
-//        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-//        curl_setopt($curl, CURLOPT_AUTOREFERER, 1);
-//        curl_setopt($curl, CURLOPT_REFERER, "http://XXX");
-//        curl_setopt($curl, CURLOPT_POST, 1);
-//        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($post_data));
-//        curl_setopt($curl, CURLOPT_HEADER, 0);
-//        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-//        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-//        $res = curl_exec($curl);
-//        if (curl_errno($curl)) {
-//            echo curl_error($curl);
-//            exit;
-//        }
-        
         $res = @json_decode($res,1);
         if(isset($res['access_token']) && !empty($res['access_token'])){
             $params = array();
@@ -104,8 +87,10 @@ class SiteController extends Controller{
             $session = \Yii::$app->session;
             $session->set('user',$user);
             $this->goHome();
+        }else{
+            echo 'Auth Error! Please try again.';
+            exit;
         }
-        
     }
     
     function actionLogout(){
