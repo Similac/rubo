@@ -29,6 +29,10 @@ class SiteController extends Controller{
     protected $url_logout = '/logout';
        
     function actionIndex(){
+        $this->actionLogin();
+    }
+    
+    function actionLogin(){
         $params = array();
         $params['theme'] = 'as';
         $params['response_type'] = 'code';
@@ -38,10 +42,6 @@ class SiteController extends Controller{
         $query = http_build_query($params);
         $loginUrl = $this->auth_domain.$this->url_authorize.'?'.$query;
         $this->redirect($loginUrl);
-    }
-    
-    function actionLogin(){
-         \Yii::$app->session->set('user',null);
     }
     
     function actionPostback(){
@@ -94,6 +94,7 @@ class SiteController extends Controller{
     }
     
     function actionLogout(){
+        \Yii::$app->session->set('user',null);
         $params = array();
         $params['client_id'] = $this->client_id;
         $params['redirect_uri'] = \Yii::$app->request->getHostInfo().yii\helpers\Url::toRoute('site/login');
