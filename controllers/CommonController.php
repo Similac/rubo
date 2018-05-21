@@ -37,6 +37,7 @@ class CommonController extends Controller{
         }elseif('site' != substr($route, 0, 4)){
             $all_permis = \Yii::$app->session['user']['permissions']->all ? \Yii::$app->session['user']['permissions']->all : array();
             if(!in_array($route, $all_permis)){
+                \Yii::$app->session->set('user',null);
                 exit("You don't have permission to access this page,Please contact tech support.");
             }
         }
