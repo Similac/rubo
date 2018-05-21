@@ -30,7 +30,6 @@ class FixController extends CommonController
     public function actionIndex()
     {
         $pb = 'http://next.mobvista.com/install?mobvista_campuuid={{uuid}}&mobvista_clickid={{clickid}}&mobvista_mark=mobvista_resent&mobvista_operator={{operator}}';
-//        $pb = 'http://www.panzhimou.cn/install.php?mobvista_campuuid={{uuid}}&mobvista_clickid={{clickid}}&mobvista_mark=mobvista_resent&mobvista_operator={{operator}}';
         $model= new Fix();         
         if(Yii::$app->request->isPost){
             $post = Yii::$app->request->post();
@@ -41,7 +40,7 @@ class FixController extends CommonController
                 $rows = $excel->readFile(self::FILE_PATH.$file_name);
                 $uuid_column = $post['Fix']['uuid_column'];
                 $clickid_column = $post['Fix']['clickid_column'];
-                $operator = $post['Fix']['operator'];
+                $operator = Yii::$app->session['user']['username'];
                 $fix_arr = array();
                 foreach ($rows as $k=>$row) 
                 {   
