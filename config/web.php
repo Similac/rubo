@@ -68,7 +68,7 @@ $config = [
     'language'=>'zh-CN',
     //设置时区
     'timezone'=>'Asia/Shanghai',
-    'defaultRoute' => 'load/index',
+    'defaultRoute' => 'redshift/index',
 ];
 
 if (YII_ENV_DEV) {

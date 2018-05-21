@@ -28,7 +28,6 @@ class CommonController extends Controller{
         return false;
     }
     
-    
     private function verifyPermission($action){
         $route = $this->route;
         // 检查是否已经登录
@@ -36,14 +35,7 @@ class CommonController extends Controller{
             $this->redirect(Url::toRoute('site/index'));
             return false;
         }else{
-            
-            if(\Yii::$app->session['user']['username'] == 'leopoon'){
-                print_r(\Yii::$app->session['user']['permissions']['all']);exit;
-                
-            }
-            
             return true;
-            
         }
     }
     
