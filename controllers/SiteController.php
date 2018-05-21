@@ -86,6 +86,7 @@ class SiteController extends Controller{
             $user['email'] = $user_info->profiles->email;
             $user['permissions'] = $user_info->permissions;
             $session = \Yii::$app->session;
+            
             $session->set('user',$user);
             $this->goHome();
         }else{

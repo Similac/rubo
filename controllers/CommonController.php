@@ -39,6 +39,7 @@ class CommonController extends Controller{
             
             if(\Yii::$app->session['user']['username'] == 'leopoon'){
                 var_dump(\Yii::$app->session['user']['permissions']);exit;
+                
             }
             
             return true;
