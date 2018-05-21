@@ -48,14 +48,6 @@ AppAsset::register($this);
                </div>
                   
                 <div class="form-group">
-                 <?= $form->field($model,'operator')->textInput([
-                   'class'=>'form-control',
-                   'placeholder'=>'输入你的英文名字',
-                   'id'=>'operator'
-                 ])?>     
-               </div>
-
-                <div class="form-group">
                   <?= $form->field($model,'upload_file')->fileInput()?>
                 </div>
                   

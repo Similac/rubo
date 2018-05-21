@@ -22,14 +22,13 @@ class Fix extends ActiveRecord
             'upload_file'=>'上传文件',
             'uuid_column'=>'UUID列名',
             'clickid_column'=>'Click ID列名',
-            'operator'=>'你的英文名字',
     	];
     }
     
     public function rules()
     {
     	return [
-            [['uuid_column','clickid_column','operator'],'required'],
+            [['uuid_column','clickid_column'],'required'],
             [['upload_file'], 'file', 'skipOnEmpty' => false],
             [['upload_file'], 'file', 'extensions' => 'csv, xlsx,xls'],
             ['upload_file','checkChinese'],
