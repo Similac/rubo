@@ -72,7 +72,7 @@ class SiteController extends Controller{
         if(isset($res['access_token']) && !empty($res['access_token'])){
             $params = array();
             $params['access_token'] = $res['access_token'];
-            $params['fields'] = 'profiles';
+            $params['fields'] = 'profiles,permissions';
             $user_info = $curl->reset()->get($this->auth_domain.$this->url_userinfo.'?'.http_build_query($params));
             $user_info = @json_decode($user_info);
             if(empty($user_info->profiles->id)){
@@ -84,6 +84,7 @@ class SiteController extends Controller{
             $user['username'] = $user_info->profiles->username;
             $user['real_name'] = $user_info->profiles->real_name;
             $user['email'] = $user_info->profiles->email;
+            $user['permissions'] = $user_info->permissions;
             $session = \Yii::$app->session;
             $session->set('user',$user);
             $this->goHome();

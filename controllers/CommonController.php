@@ -36,7 +36,13 @@ class CommonController extends Controller{
             $this->redirect(Url::toRoute('site/index'));
             return false;
         }else{
+            
+            if(\Yii::$app->session['user']['username'] == 'leopoon'){
+                var_dump(\Yii::$app->session['user']['permissions']);exit;
+            }
+            
             return true;
+            
         }
     }
     
