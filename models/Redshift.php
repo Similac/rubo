@@ -3,6 +3,9 @@ namespace app\models;
 
 use yii\db\ActiveRecord;
 use Yii;
+use app\models\Campinfo;
+use app\models\Channel_map;
+
  class Redshift extends ActiveRecord
  {
  	public $start_time;
@@ -13,6 +16,16 @@ use Yii;
     public $select;
     public $type;
     public $defraud_tag;
+
+    $all=Yii::$app->session['user']['permissions']->all;
+    // public $all=[
+    //     "fix/index",
+    //     "load/index",
+    //     "load/list",
+    //     "redshift/deducted",
+    //     "redshift/index",
+    //     "A"
+    // ];
 
  	public static function getDb()
     {
@@ -33,6 +46,8 @@ use Yii;
             ['type','integer'],
             ['uuid','requiredBytype1','skipOnEmpty' => false, 'skipOnError' => false],
             ['advertiser','requiredBytype2','skipOnEmpty' => false, 'skipOnError' => false],
+            ['uuid','checkPermissionByPm','skipOnEmpty' => false, 'skipOnError' => false],
+            ['network','checkPermissionByOm','skipOnEmpty' => true, 'skipOnError' => false]
     	];
     	
     }
@@ -70,6 +85,82 @@ use Yii;
                 $this->addError($attribute,'广告主不能为空');
             }
         }
+    }
+
+    public function checkPermissionByPm()
+    {
+        if ($this->type==0) {
+            
+            //拼接uuid
+            $uuids='\''.str_replace(',','\',\'',trim($this->uuid)).'\'';
+            
+            
+            //A:pm B:to C:tech
+            if(in_array("redshift_data_forPM", $this->all))
+            {
+                $username=Yii::$app->session['user']['username'];
+                $pms=$this->checkPm($uuids);
+
+                foreach ($pms as $v) {
+                    
+                    if($v['pm']!==$username)
+                    {
+                        $this->addError('uuid','您没有权限查看'.$v['uuid']);
+                    }
+                }
+            }
+        }
+    }
+
+    //检查om的输入渠道
+    public function checkPermissionByOm()
+    {
+        if ($this->type==0)
+        {
+            if(in_array("redshift_data_forTO", $this->all))
+            {
+
+                if(!empty($this->network)){
+                    //拼接network
+                    $networks='\''.str_replace(',','\',\'',trim($this->network)).'\'';
+                    $username=Yii::$app->session['user']['username'];
+                    $oms=$this->checkOm($networks);
+                    foreach ($oms as $v) {
+                        
+                        if($v['manager']!==$username)
+                        {
+                            $this->addError('network','您没有权限查看'.$v['network']);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //查询manager和network
+    public function checkOm($networks)
+    {
+        $sql="select
+            network,manager
+        from
+            channel_map
+        where
+            network in ($networks)";
+
+        $oms=Channel_map::findBySql($sql)->asArray()->all();
+        return $oms;
+    }
+
+    public function checkPm($uuids)
+    {
+        $sql="select
+            uuid,pm
+        from
+            mob_camp_info
+        where
+            uuid in ($uuids)";
+        $pms=Campinfo::findBySql($sql)->asArray()->all();
+        return $pms;
     }
 
  }
