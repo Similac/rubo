@@ -21,7 +21,7 @@ AppAsset::register($this);
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>导数工据</title>
+    <title>3S Support Tool</title>
     
     <!-- Bootstrap core CSS -->
     <style>
@@ -31,6 +31,21 @@ AppAsset::register($this);
 
         .navbar-brand p b{
           color:#9948a2;
+        }
+        
+        .page-footer{
+          height: 52px;
+          padding: 15px 13px 0;
+          padding-left: 233px;
+          border-top: 1px solid #cecece;
+          background: #101010;
+          width: 100%;
+          position: absolute;
+          display: block;
+          bottom: 0;
+        }
+        .txt-color-white{
+          color: #fff!important;
         }
     </style>
   </head>
@@ -71,6 +86,7 @@ AppAsset::register($this);
             <li><a href='<?php echo Url::toRoute(['fix/index'])?>'>补数据</a></li>
               <?php endif;?>
           </ul>
+
           <ul class="nav navbar-nav pull-right" style="margin-right:60px;">
             <li class="dropdown user-menu notifications-menu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
@@ -90,13 +106,15 @@ AppAsset::register($this);
          </ul>
             
         </div>
-       
-          
       </div>
     </nav>
     <hr>
     <?= $content; ?>
-    
+    <div class="page-footer">
+      <div class="col-xs-12 col-sm-6">
+        <span class="txt-color-white">3S Support Tool</span>
+      </div>
+    </div>
 <?php $this->endBody() ?>
 </body>
 </html>
