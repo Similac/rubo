@@ -7,6 +7,7 @@ use kartik\datetime\DateTimePicker;
 use yii\helpers\Url;
 use bootui\typeahead\Typeahead;
 use wbraganca\tagsinput\TagsinputWidget;
+use app\common\func;
 AppAsset::register($this);
 
 ?>
@@ -68,11 +69,18 @@ AppAsset::register($this);
             </div>
             
             <div class="form-group">
-              <?php $model->type=0;?>
-              <?= $form->field($model,'type')->inline()->radioList([
-                '0'=>'uuid维度',
-                '1'=>'advertiser维度'
-              ])?>  
+              <?php if(func::getRole()['role']=='to'):?>
+                <?php $model->type=0;?>
+                <?= $form->field($model,'type')->inline()->radioList([
+                  '0'=>'uuid维度',
+                ])?>
+              <?php else:?>
+                <?php $model->type=0;?>
+                <?= $form->field($model,'type')->inline()->radioList([
+                  '0'=>'uuid维度',
+                  '1'=>'advertiser维度'
+                ])?>
+              <?php endif;?>   
             </div>
             
             <div class="form-group" id="uuid">
@@ -112,17 +120,12 @@ AppAsset::register($this);
               '4'=>'click_ip',
               '5'=>'click_date',
               '6'=>'install_date',
+              '7'=>'impression tag',
+              '8'=>'is_bt',
+              '9'=>'match_type'
             ]);?>
             </div>
-
-            <div class="form-group">
-            <?php $model->defraud_tag='1';?>
-            <?= $form->field($model, 'defraud_tag')->dropdownList([
-              '0'=>'扣量前',
-              '1'=>'扣量后',
-            ]);?>
-            </div>
-            
+                   
             <div class="box-footer">
               <?= Html::submitButton('提交',[
                 'class'=>'btn btn-primary center-block',
