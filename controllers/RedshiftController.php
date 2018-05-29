@@ -1,24 +1,25 @@
 <?php
 namespace app\controllers;
 
-use yii\web\Controller;
+use app\controllers\CommonController;
 use app\models\Redshift;
 use moonland\phpexcel\Excel;
 use Yii;
 use app\models\Deducted;
 use yii\web\UploadedFile;
 use johnnylei\csv\TheCsv;
-use app\models\Advertiser;
+use app\models\Campinfo;
 use yii\web\Response;
 use yii\bootstrap\ActiveForm;
+use app\models\Channel_map;
+
 class RedshiftController extends CommonController
 {   
     //上传文件路径
     const FILE_PATH=__DIR__.'/../web/uploads/';
-
-    protected $count="count(*)";
+    
     protected $content="trunc( ( TIMESTAMP 'epoch' + (timestamp +(28800)) * INTERVAL '1 Second ' )) AS received_date,
-            test1.timestamp as received_timstamp,test2.uuid,test3.network,test1.mb_subid,test1.p3,test1.defraud,test1.mb_af_1";
+            test1.timestamp as received_timstamp,test2.uuid,test3.network,test1.mb_char_5,test1.status as is_reject,test1.reject_reason,test1.mb_subid,test1.p3,test1.devid,test1.defraud,test1.mb_af_1,test1.match_timestamp";
 
     public $select=[
         '(test1.p1-STRTOL (SUBSTRING(p3, 0, 9), 16)) as cti',
@@ -26,33 +27,46 @@ class RedshiftController extends CommonController
         'STRTOL (SUBSTRING(p3, 0, 9), 16) as click_timestamp',
         'test1.p1 as install_timestamp',
         'test1.ip as click_ip',
-        "trunc((TIMESTAMP 'epoch' + (STRTOL (SUBSTRING(p3, 0, 9), 16) +(28800)) * INTERVAL '1 Second ')) AS click_date",
-        "trunc((TIMESTAMP 'epoch' + (test1.p1 +(28800)) * INTERVAL '1 Second ')) AS install_date",
+        "(TIMESTAMP 'epoch' + (STRTOL (SUBSTRING(p3, 0, 9), 16) +(28800)) * INTERVAL '1 Second ') as click_date",
+        "(TIMESTAMP 'epoch' + (test1.p1 +(28800)) * INTERVAL '1 Second ') as install_date",
+        'mb_int_2 as impression_tag',
+        'mb_int_5 as is_bt',
+        'mb_char_1 as match_type',
     ];
 
-    public $defraud_tag=[
-        '',
-        'and test1.network>0'
-    ];
+    $all=Yii::$app->session['user']['permissions']->all;
+    // public $all=[
+    //     "fix/index",
+    //     "load/index",
+    //     "load/list",
+    //     "redshift/deducted",
+    //     "redshift/index",
+    //     "A"
+    // ];
+
     //public $layout=false;
     //表单ajax验证
     public function actionValidation()
     {   
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new Redshift();   //这里要替换成自己的模型类
-        $model->load(Yii::$app->request->post());  
+        
+
+        $model->load(Yii::$app->request->post());
         return ActiveForm::validate($model);
     }
 
     public function actionIndex()
-    {	
+    {   
 
         $model= new Redshift();
-        $advertisers=Advertiser::find()->all();
-        foreach ($advertisers as $v) {
-            $client[]=$v->adv_name;
+        $sql='select distinct(adv_name) from mob_camp_info';
+        $camp=Campinfo::findBySql($sql)->asArray()->all();
+        $advs=[];
+        foreach ($camp as $key => $v) {
+            $advs[]=$v['adv_name'];
         }
-
+        
         if(Yii::$app->request->isPost)
         {
             $post= Yii::$app->request->post();
@@ -68,14 +82,42 @@ class RedshiftController extends CommonController
                         //拼接uuid
                         $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
 
-                        //判断network是否为空
-                        if ($post['Redshift']['network']) {
-                            $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
-                        }
-                        else
+                        if(in_array('redshift_data_forTO', $this->all))
                         {
-                            $networks='';
+                            //判断network是否为空
+                            if ($post['Redshift']['network']) {
+                                $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                            }
+                            else
+                            {
+                                $manager=Yii::$app->session['user']['username'];
+                                $sql='select network from channel_map where manager=:manager';
+                                $channel=Channel_map::findBySql($sql,[':manager'=>$manager])->asArray()->all();
+                                
+                                $cbs='';
+                                $str=',';
+                                foreach ($channel as $k=>$v) {
+                                    if(count($channel)-$k==1)
+                                    {
+                                        $str='';
+                                    }
+                                    $cbs.='\''.$v['network'].'\''.$str;
+                                }
+                                $networks="and test3.network in ($cbs)";
+                                
+                            }
                         }
+                        else{
+                            //判断network是否为空
+                            if ($post['Redshift']['network']) {
+                                $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                            }
+                            else
+                            {
+                                $networks='';
+                            }
+                        }
+                        
                         
                         //判断select是都为空
                         if ($post['Redshift']['select']) {
@@ -90,10 +132,10 @@ class RedshiftController extends CommonController
                         {
                             $content=$this->content;
                         }
-
-                        $defraud_tag=$this->defraud_tag[$post['Redshift']['defraud_tag']];
                         
-                        $data=$this->exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content,$defraud_tag);
+                        $data=$this->exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content);
+                        
+
                         if(empty($data))
                         {
                             return '数据为空';
@@ -121,9 +163,7 @@ class RedshiftController extends CommonController
                             $content=$this->content;
                         }
 
-                        $defraud_tag=$this->defraud_tag[$post['Redshift']['defraud_tag']];
-
-                        $data=$this->exportbyadvertiserTool($start_time,$end_time,$advertiser,$content,$defraud_tag);
+                        $data=$this->exportbyadvertiserTool($start_time,$end_time,$advertiser,$content);
                         if(empty($data))
                         {
                             return '数据为空';
@@ -139,14 +179,42 @@ class RedshiftController extends CommonController
                         //拼接uuid
                         $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
 
-                        //判断network是否为空
-                        if ($post['Redshift']['network']) {
-                            $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
-                        }
-                        else
+                        if(in_array('redshift_data_forTO', $this->all))
                         {
-                            $networks='';
+                            //判断network是否为空
+                            if ($post['Redshift']['network']) {
+                                $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                            }
+                            else
+                            {
+                                $manager=Yii::$app->session['user']['username'];
+                                $sql='select network from channel_map where manager=:manager';
+                                $channel=Channel_map::findBySql($sql,[':manager'=>$manager])->asArray()->all();
+                                
+                                $cbs='';
+                                $str=',';
+                                foreach ($channel as $k=>$v) {
+                                    if(count($channel)-$k==1)
+                                    {
+                                        $str='';
+                                    }
+                                    $cbs.='\''.$v['network'].'\''.$str;
+                                }
+                                $networks="and test3.network in ($cbs)";
+                                
+                            }
                         }
+                        else{
+                            //判断network是否为空
+                            if ($post['Redshift']['network']) {
+                                $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                            }
+                            else
+                            {
+                                $networks='';
+                            }
+                        }
+                        
                         
                         //判断select是都为空
                         if ($post['Redshift']['select']) {
@@ -161,11 +229,14 @@ class RedshiftController extends CommonController
                         {
                             $content=$this->content;
                         }
-
-                        $defraud_tag=$this->defraud_tag[$post['Redshift']['defraud_tag']];
                         
-                        $data=$this->exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content,$defraud_tag);
                         
+                        $data=$this->exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content);
+                        
+                        if(empty($data))
+                        {
+                            return '数据为空';
+                        }
                         $keys=array_keys($data[0]);
                         $column_name=array_combine($keys, $keys);
                         $file_name=time();
@@ -176,27 +247,27 @@ class RedshiftController extends CommonController
             }
         }
 
-        return $this->render('index',['model'=>$model,'advertisers'=>$client]);
+        return $this->render('index',['model'=>$model,'advertisers'=>$advs]);
     }
 
-    public function exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content,$defraud_tag,$limit="")
+    public function exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content,$limit="")
     {
         $sql="select $content
-            from mob_install_log test1
+            from mob_raw_install_log test1
              left join mob_camp_info test2 on test1.uuid=test2.id
              left join channel_map test3 on test1.network=test3.cb
-             where test1.timestamp>$start_time and test1.timestamp<$end_time and test2.uuid in($uuids) $networks $defraud_tag";
+             where test1.timestamp>$start_time and test1.timestamp<$end_time and test2.uuid in($uuids)".$networks;
         $data=Redshift::findBySql($sql)->asArray()->all();
         return $data;
     }
 
-    public function exportbyadvertiserTool($start_time,$end_time,$advertiser,$content,$defraud_tag,$limit="")
+    public function exportbyadvertiserTool($start_time,$end_time,$advertiser,$content,$limit="")
     {
         $sql="select $content
-            from mob_install_log test1
+            from mob_raw_install_log test1
              left join mob_camp_info test2 on test1.uuid=test2.id
              left join channel_map test3 on test1.network=test3.cb
-             where test1.timestamp>$start_time and test1.timestamp<$end_time and test2.adv_name in ($advertiser) $defraud_tag";
+             where test1.timestamp>$start_time and test1.timestamp<$end_time and test2.adv_name in ($advertiser) ";
         $data=Redshift::findBySql($sql)->asArray()->all();
         return $data;
     }
@@ -235,7 +306,7 @@ class RedshiftController extends CommonController
     //根据广告主和clickid去匹配扣量信息
     public function matchTool($start_time,$end_time,$advertiser,$matchData,$match_column)
     {
-        $sql="select test2.uuid,test3.network as qudao,test1.mb_subid,test1.defraud,test1.mb_af_1,test1.mb_af_2,test3.manager,test1.$match_column
+        $sql="select test2.uuid,test3.network as qudao,test1.mb_subid,'mob'||SUBSTRING(md5(test1.network||'_'||test1.mb_subid),0,17) as no_bt_encodeid,test1.defraud,test1.mb_af_1,test1.mb_af_2,test3.manager,test1.$match_column
             from mob_install_log test1
              left join mob_camp_info test2 on test1.uuid=test2.id
              left join channel_map test3 on test1.network=test3.cb
@@ -251,9 +322,11 @@ class RedshiftController extends CommonController
     {   
         set_time_limit(0);
         $model = new Deducted();
-        $advertisers=Advertiser::find()->all();
-        foreach ($advertisers as $v) {
-            $client[]=$v->adv_name;
+        $sql='select distinct(adv_name) from mob_camp_info';
+        $camp=Campinfo::findBySql($sql)->asArray()->all();
+        $advs=[];
+        foreach ($camp as $key => $v) {
+            $advs[]=$v['adv_name'];
         }
         
         if(Yii::$app->request->isPost)
@@ -279,7 +352,6 @@ class RedshiftController extends CommonController
                 foreach ($rows as $k=>$row) 
                 {   
                     
-                
                     if(is_null($row[$column_name]))
                     {   
                         continue;
@@ -305,7 +377,7 @@ class RedshiftController extends CommonController
                 
                 $data=$this->matchTool($start_time,$end_time,$advertiser,strtolower($matchData),$redshift_column);
                 
-                if(!isset($data))
+                if(empty($data))
                 {
                     return 'redshift没有找到对应的数据';
                 }
@@ -331,13 +403,12 @@ class RedshiftController extends CommonController
                 
                 $column=array_keys($rows[0]);
                 $new_column=array_combine($column, $column);
-                // var_dump($rows);
-                // die();
+                
                 $this->exportCsv($rows,$new_column,explode('.', $file_name)[0]);
                 exit();
             }
         }
-        return $this->render('deducted',['model'=>$model,'advertisers'=>$client]);
+        return $this->render('deducted',['model'=>$model,'advertisers'=>$advs]);
     }
 
     public function exportExcel($result,$column_name)
@@ -368,5 +439,4 @@ class RedshiftController extends CommonController
         $csv->putRows($result);
     }
 
-    
 }
