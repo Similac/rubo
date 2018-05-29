@@ -12,6 +12,7 @@ use app\models\Campinfo;
 use yii\web\Response;
 use yii\bootstrap\ActiveForm;
 use app\models\Channel_map;
+use app\common\func;
 
 class RedshiftController extends CommonController
 {   
@@ -34,7 +35,7 @@ class RedshiftController extends CommonController
         'mb_char_1 as match_type',
     ];
 
-    $all=Yii::$app->session['user']['permissions']->all;
+    
     // public $all=[
     //     "fix/index",
     //     "load/index",
@@ -81,8 +82,10 @@ class RedshiftController extends CommonController
                         $post['Redshift']['advertiser']='';
                         //拼接uuid
                         $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
-
-                        if(in_array('redshift_data_forTO', $this->all))
+                        
+                        $role=func::getRole();
+                        
+                        if($role['role']=='to')
                         {
                             //判断network是否为空
                             if ($post['Redshift']['network']) {
@@ -178,8 +181,9 @@ class RedshiftController extends CommonController
                         $post['Redshift']['advertiser']='';
                         //拼接uuid
                         $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
+                        $role=func::getRole();
 
-                        if(in_array('redshift_data_forTO', $this->all))
+                        if($role['role']=='to')
                         {
                             //判断network是否为空
                             if ($post['Redshift']['network']) {
@@ -429,7 +433,7 @@ class RedshiftController extends CommonController
             'headers' => array_combine($column_name, $column_name)
         ]);
     }
-
+    
     public function exportCsv($result,$column_name,$file_name)
     {
         $csv = new TheCsv([

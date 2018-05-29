@@ -5,7 +5,7 @@ use yii\db\ActiveRecord;
 use Yii;
 use app\models\Campinfo;
 use app\models\Channel_map;
-
+use app\common\func;
  class Redshift extends ActiveRecord
  {
  	public $start_time;
@@ -16,8 +16,7 @@ use app\models\Channel_map;
     public $select;
     public $type;
     public $defraud_tag;
-
-    $all=Yii::$app->session['user']['permissions']->all;
+    
     // public $all=[
     //     "fix/index",
     //     "load/index",
@@ -96,7 +95,7 @@ use app\models\Channel_map;
             
             
             //A:pm B:to C:tech
-            if(in_array("redshift_data_forPM", $this->all))
+            if(in_array("redshift_data_forPM", func::getPermissions()))
             {
                 $username=Yii::$app->session['user']['username'];
                 $pms=$this->checkPm($uuids);
@@ -117,7 +116,7 @@ use app\models\Channel_map;
     {
         if ($this->type==0)
         {
-            if(in_array("redshift_data_forTO", $this->all))
+            if(in_array("redshift_data_forTO", func::getPermissions()))
             {
 
                 if(!empty($this->network)){
