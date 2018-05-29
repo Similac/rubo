@@ -21,7 +21,7 @@ AppAsset::register($this);
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>导数工据</title>
+    <title>导数工具</title>
     
     <!-- Bootstrap core CSS -->
     <style>
@@ -51,26 +51,7 @@ AppAsset::register($this);
             </div>
         </div>
         <div id="navbar" class="navbar-collapse collapse" aria-expanded="false" style="height: 1px;">
-          <ul class="nav navbar-nav navbar-right pull-left">
-             <?php 
-               $all_permis = \Yii::$app->session['user']['permissions']->all;
-             ?>
-              <?php if(in_array('redshift/index', $all_permis)):?>
-            <li><a href='<?php echo Url::toRoute(['redshift/index'])?>'>redshift数据</a></li>
-              <?php endif;?>
-              <?php if(in_array('load/index', $all_permis)):?>
-            <li><a href='<?php echo Url::toRoute(['load/index'])?>'>hadoop数据</a></li>
-              <?php endif;?>
-              <?php if(in_array('redshift/deducted', $all_permis)):?>
-            <li><a href='<?php echo Url::toRoute(['redshift/deducted'])?>'>匹配扣量</a></li>
-              <?php endif;?>
-              <?php if(in_array('load/list', $all_permis)):?>
-            <li><a href='<?php echo Url::toRoute(['load/list'])?>'>查看任务列表</a></li>
-              <?php endif;?>
-              <?php if(in_array('fix/index', $all_permis)):?>
-            <li><a href='<?php echo Url::toRoute(['fix/index'])?>'>补数据</a></li>
-              <?php endif;?>
-          </ul>
+          
           <ul class="nav navbar-nav pull-right" style="margin-right:60px;">
             <li class="dropdown user-menu notifications-menu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
