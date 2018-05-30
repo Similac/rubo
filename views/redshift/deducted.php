@@ -11,7 +11,8 @@ AppAsset::register($this);
 ?>
 
 <!-- Main content -->
-<section class="content">
+<div class="container">
+    <section class="content">
   <div class="row">
     <div class="col-md-12">
       <!-- Horizontal Form -->
@@ -100,64 +101,10 @@ AppAsset::register($this);
         <?php ActiveForm::end();?>
       </div><!-- /.box -->
   </div>
-</section>
+      </section>
+</div>
 <?php
 $js=<<<js
-// $(document).on('beforeSubmit', 'form#loadForm', function () {
-//     // if($("#uuid").val()=='' && $("#network").val()=='')
-//     // {
-//     //   swal({
-//     //         title: '<small style="color:red">uuid和network必须填写其中一个</small>',
-//     //         text: '3秒后自动关闭',
-//     //         //type: 'info',
-//     //         timer:3000,
-//     //       
-//     //       })
-//     //   return false;
-//     // }
-//     var form = $(this); 
-//     $('#btn').attr('disabled',"true").text("Loaing....");
-
-//     $.ajax({
-//       url  : form.attr('action'), 
-//       type  : 'post', 
-//       data  : form.serialize(), 
-//       success: function (response){
-//         if(response.status){
-//           $('#btn').removeAttr("disabled").text("提交");
-//           swal({
-//             title: response.msg,
-//             text: '3秒后自动关闭',
-//             type: 'success',
-//             timer:3000,
-            
-//           })
-          
-//         }
-//         else{
-//           $('#btn').removeAttr("disabled").text("提交");
-//           swal({
-//             title: response.msg,
-//             text: '3秒后自动关闭',
-//             type: 'warning',
-//             timer:3000,
-            
-//           })
-//         }
-//       }, 
-//       error : function (){
-//         $('#btn').removeAttr("disabled").text("提交");
-//         swal({
-//             title: '系统错误',
-//             text: '3秒后自动关闭',
-//             type: 'error',
-//             timer:3000,
-            
-//         })
-//       } 
-//     }); 
-//     return false; 
-//   }); 
 
 js;
 $this->registerJs($js); 
