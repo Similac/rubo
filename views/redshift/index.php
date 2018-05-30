@@ -120,6 +120,11 @@ AppAsset::register($this);
               '4'=>'click_ip',
               '5'=>'click_date',
               '6'=>'install_date',
+            ]);?>
+            </div>
+            
+            <div class="form-group">
+            <?= $form->field($model, 'select')->inline()->checkboxList([
               '7'=>'impression tag',
               '8'=>'is_bt',
               '9'=>'match_type'
@@ -158,54 +163,6 @@ $('input:radio[name="Redshift[type]"]').click(function(){
     $("#network").show();
   }
 })
-
-// $(document).on('beforeSubmit', 'form#loadForm', function () {
-
-//     var form = $(this); 
-//     $('#btn').attr('disabled',"true").text("Loaing....");
-    
-//     $.ajax({
-//       url  : form.attr('action'), 
-//       type  : 'post', 
-//       data  : form.serialize(), 
-//       success: function (response){
-//         if(response.status){
-//           $('#btn').removeAttr("disabled").text("提交");
-//           swal({
-//             title: response.msg,
-//             text: '3秒后自动关闭',
-//             type: 'success',
-//             timer:3000,
-            
-//           })
-          
-          
-//         }
-//         else{
-//           $('#btn').removeAttr("disabled").text("提交");
-//           swal({
-//             title: response.msg,
-//             text: '3秒后自动关闭',
-//             type: 'warning',
-//             timer:3000,
-            
-//           })
-//         }
-//       }, 
-//       error : function (){
-//         $('#btn').removeAttr("disabled").text("提交");
-//         swal({
-//             title: '系统错误',
-//             text: '3秒后自动关闭',
-//             type: 'error',
-//             timer:3000,
-            
-//         })
-//       } 
-//     }); 
-//     return false; 
-//   }); 
-
 
 js;
 $this->registerJs($js); 

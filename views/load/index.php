@@ -9,7 +9,7 @@ AppAsset::register($this);
 
 ?>
 
-<!-- Main content -->
+<div class="container">
 <section class="content">
   <div class="row">
     <div class="col-md-12">
@@ -184,17 +184,18 @@ AppAsset::register($this);
 
           <?php if(!isset($model->created_at)):?>
           <div class="box-footer">
-            
             <?= Html::submitButton('提交',[
               'class'=>'btn btn-primary center-block',
               'id'=>'btn'
             ])?>
           </div><!-- /.box-footer -->
         <?php endif;?>
+          
         <?php ActiveForm::end();?>
       </div><!-- /.box -->
   </div>
-</section>
+  </section>
+</div>
 
 <?php
 
