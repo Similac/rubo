@@ -51,6 +51,8 @@ AppAsset::register($this);
   </head>
 <body>
 <?php $this->beginBody() ?>
+
+<div class="container">
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -110,12 +112,17 @@ AppAsset::register($this);
     </nav>
     <hr>
     <?= $content; ?>
-    <div class="page-footer">
-      <div class="col-xs-12 col-sm-6">
-        <span class="txt-color-white">3S Support Tool</span>
-      </div>
-    </div>
+    
+</div>
+    
+<!--<div class="page-footer" style="position:fixed;">
+  <div class="col-xs-12 col-sm-6">
+    <span class="txt-color-white">3S Support Tool</span>
+  </div>
+</div>-->
+    
 <?php $this->endBody() ?>
 </body>
+
 </html>
 <?php $this->endPage() ?>
