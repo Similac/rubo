@@ -70,7 +70,8 @@ AppAsset::register($this);
         <div id="navbar" class="navbar-collapse collapse" aria-expanded="false" style="height: 1px;">
           <ul class="nav navbar-nav navbar-right pull-left">
              <?php 
-               $all_permis = \Yii::$app->session['user']['permissions']->all;
+              $all_permis = \Yii::$app->session['user']['permissions']->all;
+              
              ?>
               <?php if(in_array('redshift/index', $all_permis)):?>
             <li><a href='<?php echo Url::toRoute(['redshift/index'])?>'>redshift数据</a></li>
@@ -86,6 +87,9 @@ AppAsset::register($this);
               <?php endif;?>
               <?php if(in_array('fix/index', $all_permis)):?>
             <li><a href='<?php echo Url::toRoute(['fix/index'])?>'>补数据</a></li>
+              <?php endif;?>
+              <?php if(in_array('genmob/index', $all_permis)):?>
+            <li><a href='<?php echo Url::toRoute(['genmob/index'])?>'>随机生成子渠道</a></li>
               <?php endif;?>
           </ul>
 
