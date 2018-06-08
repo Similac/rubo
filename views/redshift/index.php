@@ -120,11 +120,6 @@ AppAsset::register($this);
               '4'=>'click_ip',
               '5'=>'click_date',
               '6'=>'install_date',
-            ]);?>
-            </div>
-            
-            <div class="form-group">
-            <?= $form->field($model, 'select')->inline()->checkboxList([
               '7'=>'impression tag',
               '8'=>'is_bt',
               '9'=>'match_type'
