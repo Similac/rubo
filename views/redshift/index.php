@@ -125,6 +125,7 @@ AppAsset::register($this);
               '9'=>'match_type'
             ]);?>
             </div>
+            
                    
             <div class="box-footer">
               <?= Html::submitButton('提交',[
