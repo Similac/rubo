@@ -18,7 +18,7 @@ class Deducted extends Model
     		[['start_time','end_time','advertiser','clickid_column'],'required'],
 	    	['end_time', 'compare', 'compareAttribute'=>'start_time', 'operator' => '>'],
 	    	[['upload_file'], 'file', 'skipOnEmpty' => false],
-            [['upload_file'], 'file', 'extensions' => 'csv, xlsx,xls'],
+            [['upload_file'], 'file', 'extensions' => 'xlsx'],
             ['upload_file','checkChinese'],
             
     	];
