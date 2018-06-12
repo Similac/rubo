@@ -40,6 +40,11 @@ class Genmob extends Model
 			{
 				$mobs=explode("\n", $this->mob_input);
 
+				if(count($mobs)>$this->nums)
+				{
+					$this->addError($attribute,'指定mob号不能大于总个数');
+				}
+
 				foreach ($mobs as $key => $v) {
 					
 					$v = preg_replace("/[^0-9a-zA-Z]/", "", $v);
