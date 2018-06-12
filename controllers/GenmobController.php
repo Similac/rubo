@@ -74,7 +74,7 @@ class GenmobController extends CommonController
 		$format=[
 			'0'=>'[parseInt(Math.random()*'.$nums.')]',
 			'1'=>'[parseInt((((Math.sin(Math.random())/Math.sin(1))+(Math.sin(Math.random())/Math.sin(1)))/2)*'.$nums.')]',
-			'2'=>'[parseInt((((Math.sin(Math.random())/Math.sin(1))+((100-parseInt(parseInt(new Date().getTime()/1000/60/60/15).toString().substr(3,2)))/100))/2)*'.$nums.')]',
+			'2'=>'[parseInt((((Math.sin(Math.random())/Math.sin(1))+((parseInt(parseInt(new Date().getTime()/10/60/60/15).toString().substr(5,2)))/100))/2)*'.$nums.')]',
 			
 		];
 		return $format[$format_select];
