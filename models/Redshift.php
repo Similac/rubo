@@ -13,10 +13,12 @@ use app\common\func;
  	public $uuid;
  	public $network;
  	public $advertiser;
-    public $select;
     public $type;
     public $defraud_tag;
-    
+    public $source;
+    public $install_select;
+    public $raw_install_select;
+    public $event_select;
     // public $all=[
     //     "fix/index",
     //     "load/index",
@@ -41,16 +43,22 @@ use app\common\func;
     {	
     	return [
     		[['start_time','end_time'],'required'],
+            [['start_time','end_time'],'date', 'format'=>'yyyy-MM-dd HH:mm'],
 	    	['end_time', 'compare', 'compareAttribute'=>'start_time', 'operator' => '>'],
             ['type','integer'],
+            ['source','integer'],
             ['uuid','requiredBytype1','skipOnEmpty' => false, 'skipOnError' => false],
-            ['advertiser','requiredBytype2','skipOnEmpty' => false, 'skipOnError' => false],
+            ['uuid','uuidLimit','skipOnEmpty' => false, 'skipOnError' => false],
             ['uuid','checkPermissionByPm','skipOnEmpty' => false, 'skipOnError' => false],
-            ['network','checkPermissionByOm','skipOnEmpty' => true, 'skipOnError' => false]
+            ['advertiser','requiredBytype2','skipOnEmpty' => false, 'skipOnError' => false],
+            ['advertiser','advertiserLimit','skipOnEmpty' => false, 'skipOnError' => false],
+            ['network','checkPermissionByOm','skipOnEmpty' => true, 'skipOnError' => false],
+            ['install_select','requiredByinstall','skipOnEmpty' => false, 'skipOnError' => false],
+            ['raw_install_select','requiredByrawinstall','skipOnEmpty' => false, 'skipOnError' => false],
+            ['event_select','requiredByevent','skipOnEmpty' => false, 'skipOnError' => false],
     	];
     	
     }
-
 
     public function attributeLabels()
     {
@@ -62,10 +70,40 @@ use app\common\func;
     		'advertiser'=>'广告主',
             'upload_file'=>'上传文件',
             'timezone'=>'时区',
-            'select'=>'添加字段',
+            'install_select'=>'install log导出字段',
+            'raw_install_select'=>'raw_install_log导出字段',
+            'event_select'=>'event log导出字段',
             'type'=>'维度类型',
-            'defraud_tag'=>'扣量标记'
+            'defraud_tag'=>'扣量标记',
+            'source'=>'数据源'
     	];
+    }
+
+    public function requiredByinstall($attribute,$params)
+    {
+       if ($this->source==0) {
+            if (empty($this->$attribute)){
+                $this->addError($attribute, "install导出字段不能为空");
+            }
+        }
+    }
+
+    public function requiredByrawinstall($attribute,$params)
+    {
+       if ($this->source==1) {
+            if (empty($this->$attribute)){
+                $this->addError($attribute, "rawinstall导出字段不能为空");
+            }
+        }
+    }
+
+    public function requiredByevent($attribute,$params)
+    {
+       if ($this->source==2) {
+            if (empty($this->$attribute)){
+                $this->addError($attribute, "event导出字段不能为空");
+            }
+        }
     }
 
     public function requiredBytype1($attribute,$params)
@@ -74,6 +112,25 @@ use app\common\func;
             if (empty($this->$attribute)){
                 $this->addError($attribute, "uuid不能为空");
             }
+        }
+    }
+
+    public function uuidLimit($attribute,$params)
+    {
+        
+        $uuid_arr=explode(",", $this->uuid);
+        if(count($uuid_arr)>3)
+        {
+            $this->addError($attribute, "uuid最多只能查询2个");
+        }
+    }
+
+    public function advertiserLimit($attribute,$params)
+    {
+        $advertiser_arr=explode(",", $this->advertiser);
+        if(count($advertiser_arr)>1)
+        {
+            $this->addError($attribute, "advertiser最多只能查询1个");
         }
     }
 
@@ -90,21 +147,22 @@ use app\common\func;
     {
         if ($this->type==0) {
             
-            //拼接uuid
-            $uuids='\''.str_replace(',','\',\'',trim($this->uuid)).'\'';
-            
-            
             //A:pm B:to C:tech
             if(in_array("redshift_data_forPM", func::getPermissions()))
             {
-                $username=Yii::$app->session['user']['username'];
-                $pms=$this->checkPm($uuids);
+                if(!empty($this->uuid))
+                {
+                    //拼接uuid
+                    $uuids='\''.str_replace(',','\',\'',trim($this->uuid)).'\'';
+                    $username=Yii::$app->session['user']['username'];
+                    $pms=$this->checkPm($uuids);
 
-                foreach ($pms as $v) {
-                    
-                    if($v['pm']!==$username)
-                    {
-                        $this->addError('uuid','您没有权限查看'.$v['uuid']);
+                    foreach ($pms as $v) {
+                        
+                        if($v['pm']!==$username)
+                        {
+                            $this->addError('uuid','您没有权限查看'.$v['uuid']);
+                        }
                     }
                 }
             }
@@ -121,9 +179,9 @@ use app\common\func;
 
                 if(!empty($this->network)){
                     //拼接network
-                    $networks='\''.str_replace(',','\',\'',trim($this->network)).'\'';
+                    $cbs='\''.str_replace(',','\',\'',trim($this->network)).'\'';
                     $username=Yii::$app->session['user']['username'];
-                    $oms=$this->checkOm($networks);
+                    $oms=$this->checkOm($cbs);
                     foreach ($oms as $v) {
                         
                         if($v['manager']!==$username)
@@ -137,27 +195,27 @@ use app\common\func;
     }
 
     //查询manager和network
-    public function checkOm($networks)
+    public function checkOm($cbs)
     {
         $sql="select
-            network,manager
+            cd,network,manager
         from
             channel_map
         where
-            network in ($networks)";
+            cb in ($cbs)";
 
         $oms=Channel_map::findBySql($sql)->asArray()->all();
         return $oms;
     }
 
-    public function checkPm($uuids)
+    public function checkPm($ids)
     {
         $sql="select
-            uuid,pm
+            id,uuid,pm
         from
             mob_camp_info
         where
-            uuid in ($uuids)";
+            id in ($ids)";
         $pms=Campinfo::findBySql($sql)->asArray()->all();
         return $pms;
     }

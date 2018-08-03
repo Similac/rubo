@@ -20,12 +20,13 @@ class AppAsset extends AssetBundle
     public $css = [
         'static/css/AdminLTE.min.css',
         'static/css/sweetalert2.min.css',
-        
+        'static/css/bootstrap-tagsinput.css'
     ];
     public $js = [
       'static/js/sweetalert2.min.js',
+      'static/js/jquery.min.js',
       'static/js/bootstrap.min.js',
-      
+      'static/js/bootstrap-tagsinput.min.js'
     ];
     public $depends = [
         'yii\web\YiiAsset',
