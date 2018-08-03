@@ -10,10 +10,10 @@ use yii\web\Response;
 use yii\bootstrap\ActiveForm;
 use app\models\Channel_map;
 use app\common\func;
-use moonland\phpexcel\Excel;
 use app\models\Select;
 use yii\helpers\Url;
 use app\models\Campinfo;
+use moonland\phpexcel\Excel;
 class RedshiftController extends CommonController
 {   
     //上传文件路径
@@ -30,7 +30,7 @@ class RedshiftController extends CommonController
     public $table=['mob_install_log','mob_raw_install_log','mob_event_log'];
 
     //生成csv的路径
-    public $csv_path=__DIR__.'/../web/general_csv/';
+    public $csv_path=__DIR__.'/../web/general_csv';
 
     //表单ajax验证
     public function actionValidation()
@@ -255,12 +255,11 @@ class RedshiftController extends CommonController
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['install_select']);
                             $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[0]);
                             if($data)
-                            {
-
+                            {   
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
-                                $csv_path=$this->csv_path.$file_name;
-                                if($this->genCsv($header,$data,$csv_path))
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
                                 {   
                                     $url=Url::to("@web/general_csv/$file_name", true);
                                     return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
@@ -281,8 +280,8 @@ class RedshiftController extends CommonController
 
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
-                                $csv_path=$this->csv_path.$file_name;
-                                if($this->genCsv($header,$data,$csv_path))
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
                                 {   
                                     $url=Url::to("@web/general_csv/$file_name", true);
                                     return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
@@ -302,8 +301,8 @@ class RedshiftController extends CommonController
                             if($data){
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
-                                $csv_path=$this->csv_path.$file_name;
-                                if($this->genCsv($header,$data,$csv_path))
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
                                 {   
                                     $url=Url::to("@web/general_csv/$file_name", true);
                                     return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
@@ -327,8 +326,8 @@ class RedshiftController extends CommonController
                             if($data){
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
-                                $csv_path=$this->csv_path.$file_name;
-                                if($this->genCsv($header,$data,$csv_path))
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
                                 {   
                                     $url=Url::to("@web/general_csv/$file_name", true);
                                     return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
@@ -347,8 +346,8 @@ class RedshiftController extends CommonController
                             if($data){
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
-                                $csv_path=$this->csv_path.$file_name;
-                                if($this->genCsv($header,$data,$csv_path))
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
                                 {   
                                     $url=Url::to("@web/general_csv/$file_name", true);
                                     return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
@@ -367,8 +366,8 @@ class RedshiftController extends CommonController
                             if($data){
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
-                                $csv_path=$this->csv_path.$file_name;
-                                if($this->genCsv($header,$data,$csv_path))
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
                                 {   
                                     $url=Url::to("@web/general_csv/$file_name", true);
                                     return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
@@ -435,8 +434,8 @@ class RedshiftController extends CommonController
 
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
-                                $csv_path=$this->csv_path.$file_name;
-                                if($this->genCsv($header,$data,$csv_path))
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
                                 {   
                                     $url=Url::to("@web/general_csv/$file_name", true);
                                     return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
@@ -457,8 +456,8 @@ class RedshiftController extends CommonController
 
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
-                                $csv_path=$this->csv_path.$file_name;
-                                if($this->genCsv($header,$data,$csv_path))
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
                                 {   
                                     $url=Url::to("@web/general_csv/$file_name", true);
                                     return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
@@ -478,8 +477,8 @@ class RedshiftController extends CommonController
                             if($data){
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
-                                $csv_path=$this->csv_path.$file_name;
-                                if($this->genCsv($header,$data,$csv_path))
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
                                 {   
                                     $url=Url::to("@web/general_csv/$file_name", true);
                                     return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
@@ -586,13 +585,13 @@ class RedshiftController extends CommonController
         echo json_encode($result);
     }
 
-    public function genCsv($header,$contents,$path)
+    public function genCsv($header,$contents,$path,$file_name)
     {
         if(!file_exists($path))
         {
             mkdir($path, 0777, true);
         }
-        $handle = fopen( $path, 'wb' );
+        $handle = fopen($path.'/'.$file_name, 'wb' );
         if ($handle) {
             foreach ($header as $k=>$v) {
                $header[$k]=iconv( 'UTF-8', 'GB2312//IGNORE', $v );
