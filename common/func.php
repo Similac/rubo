@@ -8,15 +8,15 @@ class func{
 
 	public static function getPermissions()
 	{
-        //return (array) \Yii::$app->session['user']['permissions']->all;
-        return [
-            "fix/index",
-            "load/index",
-            "load/list",
-            "redshift/deducted",
-            "redshift/index",
-            "redshift_data_forPM"
-        ];
+        return (array) \Yii::$app->session['user']['permissions']->all;
+        // return [
+        //     "fix/index",
+        //     "load/index",
+        //     "load/list",
+        //     "redshift/deducted",
+        //     "redshift/index",
+        //     "redshift_data_forPM"
+        // ];
 	}
 
 	public static function getRole()
