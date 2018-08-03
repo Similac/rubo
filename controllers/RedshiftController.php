@@ -3,38 +3,20 @@ namespace app\controllers;
 
 use app\controllers\CommonController;
 use app\models\Redshift;
-use moonland\phpexcel\Excel;
 use Yii;
 use app\models\Deducted;
 use yii\web\UploadedFile;
-use johnnylei\csv\TheCsv;
-use app\models\Campinfo;
 use yii\web\Response;
 use yii\bootstrap\ActiveForm;
 use app\models\Channel_map;
 use app\common\func;
-
+use app\models\Select;
+use yii\helpers\Url;
+use app\models\Campinfo;
 class RedshiftController extends CommonController
 {   
     //上传文件路径
     const FILE_PATH=__DIR__.'/../web/uploads/';
-    
-    protected $content="trunc( ( TIMESTAMP 'epoch' + (timestamp +(28800)) * INTERVAL '1 Second ' )) AS received_date,
-            test1.timestamp as received_timstamp,test2.uuid,test3.network,test1.mb_char_5,test1.status as is_reject,test1.reject_reason,test1.mb_subid,test1.p3,test1.devid,test1.defraud,test1.mb_af_1,test1.match_timestamp";
-
-    public $select=[
-        '(test1.p1-STRTOL (SUBSTRING(p3, 0, 9), 16)) as cti',
-        'test3.manager as manager',
-        'STRTOL (SUBSTRING(p3, 0, 9), 16) as click_timestamp',
-        'test1.p1 as install_timestamp',
-        'test1.ip as click_ip',
-        "(TIMESTAMP 'epoch' + (STRTOL (SUBSTRING(p3, 0, 9), 16) +(28800)) * INTERVAL '1 Second ') as click_date",
-        "(TIMESTAMP 'epoch' + (test1.p1 +(28800)) * INTERVAL '1 Second ') as install_date",
-        'mb_int_2 as impression_tag',
-        'mb_int_5 as is_bt',
-        'mb_char_1 as match_type',
-    ];
-
     
     // public $all=[
     //     "fix/index",
@@ -44,8 +26,11 @@ class RedshiftController extends CommonController
     //     "redshift/index",
     //     "A"
     // ];
+    public $table=['mob_install_log','mob_raw_install_log','mob_event_log'];
 
-    //public $layout=false;
+    //生成csv的路径
+    public $csv_path=__DIR__.'/../web/general_csv/';
+
     //表单ajax验证
     public function actionValidation()
     {   
@@ -57,260 +42,32 @@ class RedshiftController extends CommonController
         return ActiveForm::validate($model);
     }
 
-    public function actionIndex()
-    {   
-
-        $model= new Redshift();
-        $sql='select distinct(adv_name) from mob_camp_info';
-        $camp=Campinfo::findBySql($sql)->asArray()->all();
-        $advs=[];
-        foreach ($camp as $key => $v) {
-            $advs[]=$v['adv_name'];
-        }
-        
-        if(Yii::$app->request->isPost)
-        {
-            $post= Yii::$app->request->post();
-            $start_time=strtotime($post['Redshift']['start_time']);
-            $end_time=strtotime($post['Redshift']['end_time']);
-            if($model->load($post) && $model->validate())
-            {   
-
-                //Yii::$app->response->format=Response::FORMAT_JSON;
-                switch ($post['Redshift']['type']) {
-                    case '0':
-                        $post['Redshift']['advertiser']='';
-                        //拼接uuid
-                        $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
-                        
-                        $role=func::getRole();
-                        
-                        if($role['role']=='to')
-                        {
-                            //判断network是否为空
-                            if ($post['Redshift']['network']) {
-                                $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
-                            }
-                            else
-                            {
-                                $manager=Yii::$app->session['user']['username'];
-                                $sql='select network from channel_map where manager=:manager';
-                                $channel=Channel_map::findBySql($sql,[':manager'=>$manager])->asArray()->all();
-                                
-                                $cbs='';
-                                $str=',';
-                                foreach ($channel as $k=>$v) {
-                                    if(count($channel)-$k==1)
-                                    {
-                                        $str='';
-                                    }
-                                    $cbs.='\''.$v['network'].'\''.$str;
-                                }
-                                $networks="and test3.network in ($cbs)";
-                                
-                            }
-                        }
-                        else{
-                            //判断network是否为空
-                            if ($post['Redshift']['network']) {
-                                $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
-                            }
-                            else
-                            {
-                                $networks='';
-                            }
-                        }
-                        
-                        
-                        //判断select是都为空
-                        if ($post['Redshift']['select']) {
-                            $select_con='';
-                            foreach ($post['Redshift']['select'] as $v) {
-                                $select_con.=','.$this->select[$v];
-
-                            }
-                            $content=$this->content.$select_con;
-                        }
-                        else
-                        {
-                            $content=$this->content;
-                        }
-                        
-                        $data=$this->exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content);
-                        
-
-                        if(empty($data))
-                        {
-                            return '数据为空';
-                        }
-                        $keys=array_keys($data[0]);
-                        $column_name=array_combine($keys, $keys);
-                        $file_name=time();
-                        $this->exportCsv($data,$column_name,$file_name);
-                        exit();
-                        break;
-                    case '1':
-                        $post['Redshift']['uuid']='';
-                        $post['Redshift']['network']='';
-                        $advertiser='\''.$post['Redshift']['advertiser'].'\'';
-                        //判断select是都为空
-                        if ($post['Redshift']['select']) {
-                            $select_con='';
-                            foreach ($post['Redshift']['select'] as $v) {
-                                $select_con.=','.$this->select[$v];
-                            }
-                            $content=$this->content.$select_con;
-                        }
-                        else
-                        {
-                            $content=$this->content;
-                        }
-
-                        $data=$this->exportbyadvertiserTool($start_time,$end_time,$advertiser,$content);
-                        if(empty($data))
-                        {
-                            return '数据为空';
-                        }
-                        $keys=array_keys($data[0]);
-                        $column_name=array_combine($keys, $keys);
-                        $file_name=time();
-                        $this->exportCsv($data,$column_name,$file_name);
-                        exit();
-                        break;
-                    default:
-                        $post['Redshift']['advertiser']='';
-                        //拼接uuid
-                        $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
-                        $role=func::getRole();
-
-                        if($role['role']=='to')
-                        {
-                            //判断network是否为空
-                            if ($post['Redshift']['network']) {
-                                $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
-                            }
-                            else
-                            {
-                                $manager=Yii::$app->session['user']['username'];
-                                $sql='select network from channel_map where manager=:manager';
-                                $channel=Channel_map::findBySql($sql,[':manager'=>$manager])->asArray()->all();
-                                
-                                $cbs='';
-                                $str=',';
-                                foreach ($channel as $k=>$v) {
-                                    if(count($channel)-$k==1)
-                                    {
-                                        $str='';
-                                    }
-                                    $cbs.='\''.$v['network'].'\''.$str;
-                                }
-                                $networks="and test3.network in ($cbs)";
-                                
-                            }
-                        }
-                        else{
-                            //判断network是否为空
-                            if ($post['Redshift']['network']) {
-                                $networks='and test3.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
-                            }
-                            else
-                            {
-                                $networks='';
-                            }
-                        }
-                        
-                        
-                        //判断select是都为空
-                        if ($post['Redshift']['select']) {
-                            $select_con='';
-                            foreach ($post['Redshift']['select'] as $v) {
-                                $select_con.=','.$this->select[$v];
-
-                            }
-                            $content=$this->content.$select_con;
-                        }
-                        else
-                        {
-                            $content=$this->content;
-                        }
-                        
-                        
-                        $data=$this->exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content);
-                        
-                        if(empty($data))
-                        {
-                            return '数据为空';
-                        }
-                        $keys=array_keys($data[0]);
-                        $column_name=array_combine($keys, $keys);
-                        $file_name=time();
-                        $this->exportCsv($data,$column_name,$file_name);
-                        exit();
-                        break;
-                }
-            }
-        }
-
-        return $this->render('index',['model'=>$model,'advertisers'=>$advs]);
-    }
-
-    public function exportbyuuidTool($start_time,$end_time,$uuids,$networks,$content,$limit="")
+    public function exportByuuid($start_time,$end_time,$uuids,$networks,$selects,$source)
     {
-        $sql="select $content
-            from mob_raw_install_log test1
-             left join mob_camp_info test2 on test1.uuid=test2.id
-             left join channel_map test3 on test1.network=test3.cb
-             where test1.timestamp>$start_time and test1.timestamp<$end_time and test2.uuid in($uuids)".$networks;
+        $sql="select $selects
+            from $source a
+             left join mob_camp_info b on a.uuid=b.id
+             left join channel_map c on a.network=c.cb
+             where a.timestamp>$start_time and a.timestamp<$end_time and a.uuid in($uuids) and a.network>0 ".$networks;
         $data=Redshift::findBySql($sql)->asArray()->all();
         return $data;
     }
 
-    public function exportbyadvertiserTool($start_time,$end_time,$advertiser,$content,$limit="")
+    public function exportByadvertiser($start_time,$end_time,$advertiser,$selects,$source)
     {
-        $sql="select $content
-            from mob_raw_install_log test1
-             left join mob_camp_info test2 on test1.uuid=test2.id
-             left join channel_map test3 on test1.network=test3.cb
-             where test1.timestamp>$start_time and test1.timestamp<$end_time and test2.adv_name in ($advertiser) ";
+        $sql="select $selects
+            from $source a
+             left join mob_camp_info b on a.uuid=b.id
+             left join channel_map c on a.network=c.cb
+             where a.timestamp>$start_time and a.timestamp<$end_time and b.adv_name in ($advertiser) and a.network>0";
         $data=Redshift::findBySql($sql)->asArray()->all();
         return $data;
     }
 
-    public function actionExport()
-    {
-        $start_time= Yii::$app->request->get('start_time');
-        $end_time= Yii::$app->request->get('end_time');
-        $uuid= Yii::$app->request->get('uuid');
-        $result=$this->exportTool($start_time,$end_time,$uuid,$this->contents);
-        if(!$result)
-        {
-            return '出错了';
-        }
-
-
-        Excel::export([
-            'models'=>$result,
-            'fileName'=>date('Ymd').'_'.'export',
-            'columns'=>[
-                'received_date','uuid','network','mb_subid','p3','defraud','mb_af_1'
-            ],
-            'headers'=>[
-                'received_date'=>'时间',
-                'uuid'=>'uuid',
-                'network'=>'渠道',
-                'mb_subid'=>'subid',
-                'p3'=>'clickid',
-                'defraud'=>'扣量标记',
-                'mb_af_1'=>'渠道clickid'
-            ],
-        ]);
-    }
-
-    
     //根据广告主和clickid去匹配扣量信息
     public function matchTool($start_time,$end_time,$advertiser,$matchData,$match_column)
     {
-        $sql="select test2.uuid,test3.network as qudao,test1.mb_subid,'mob'||SUBSTRING(md5(test1.network||'_'||test1.mb_subid),0,17) as no_bt_encodeid,test1.defraud,test1.mb_af_1,test1.mb_af_2,test3.manager,test1.$match_column
+        $sql="select test2.uuid,test3.network as qudao,test3.alias,test1.mb_subid,'mob'||SUBSTRING(md5(test1.network||'_'||test1.mb_subid),0,17) as no_bt_encodeid,test1.defraud,test1.mb_af_1,test1.mb_af_2,test3.manager,test1.$match_column
             from mob_install_log test1
              left join mob_camp_info test2 on test1.uuid=test2.id
              left join channel_map test3 on test1.network=test3.cb
@@ -405,42 +162,452 @@ class RedshiftController extends CommonController
 
                 }
                 
-                $column=array_keys($rows[0]);
-                $new_column=array_combine($column, $column);
-                
-                $this->exportCsv($rows,$new_column,explode('.', $file_name)[0]);
+                func::exportCsv($rows,explode('.', $file_name)[0]);
                 exit();
             }
         }
         return $this->render('deducted',['model'=>$model,'advertisers'=>$advs]);
     }
 
-    public function exportExcel($result,$column_name)
-    {
-        Excel::export([
-            'models'=>$result,
-            'fileName'=>date('Ymd').'_'.'export',
-            'columns'=>$column_name,
-            // 'headers'=>[
-            //     'received_date'=>'时间',
-            //     'uuid'=>'uuid',
-            //     'network'=>'渠道',
-            //     'mb_subid'=>'subid',
-            //     'p3'=>'clickid',
-            //     'defraud'=>'扣量标记',
-            //     'mb_af_1'=>'渠道clickid'
-            // ],
-            'headers' => array_combine($column_name, $column_name)
-        ]);
-    }
-    
-    public function exportCsv($result,$column_name,$file_name)
-    {
-        $csv = new TheCsv([
-            'header'=>$column_name,
-            'fileName'=>$file_name.'_export.csv',
-        ]);
-        $csv->putRows($result);
+    public function actionIndex()
+    {   
+        set_time_limit(0);
+
+        $all_selects=$this->getSelects("select id,content,source,name from shop_selects");
+        
+        foreach ($all_selects as $v) {
+            if($v['source']==0)
+            {
+               $select_for_install[]=$v; 
+            }elseif ($v['source']==1) {
+                $select_for_raw_install[]=$v;
+            }else
+            {
+                $select_for_event[]=$v;
+            }
+        }
+
+        $model = new Redshift();
+        
+        if(Yii::$app->request->isPost)
+        {   
+            
+            if(Yii::$app->request->isAjax)
+            {
+                Yii::$app->response->format=Response::FORMAT_JSON;
+            }
+
+            $post=Yii::$app->request->post();
+            
+            if($model->load($post) && $model->validate())
+            {
+                $start_time=strtotime($post['Redshift']['start_time']);
+                $end_time=strtotime($post['Redshift']['end_time']);
+                switch ($post['Redshift']['type']) {
+                    case '0':
+                        $post['Redshift']['advertiser']='';
+                        //拼接uuid
+                        $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
+                        
+                        $role=func::getRole();
+                        
+                        if($role['role']=='to')
+                        {
+                            //判断network是否为空
+                            if ($post['Redshift']['network']) 
+                            {
+                                $networks='and a.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                            }
+                            else
+                            {
+                                $manager=Yii::$app->session['user']['username'];
+                                $sql='select network from channel_map where manager=:manager';
+                                $channel=Channel_map::findBySql($sql,[':manager'=>$manager])->asArray()->all();
+                                
+                                $cbs='';
+                                $str=',';
+                                foreach ($channel as $k=>$v) {
+                                    if(count($channel)-$k==1)
+                                    {
+                                        $str='';
+                                    }
+                                    $cbs.='\''.$v['network'].'\''.$str;
+                                }
+                                $networks="and a.network in ($cbs)";
+                                
+                            }
+                        }
+                        else{
+                            //判断network是否为空
+                            if ($post['Redshift']['network']) {
+                                $networks='and a.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                            }
+                            else
+                            {
+                                $networks='';
+                            }
+                        }
+                        
+                        //选择install log
+                        if($post['Redshift']['source']==0)
+                        {   
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['install_select']);
+                            $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[0]);
+                            if($data)
+                            {
+
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path.$file_name;
+                                if($this->genCsv($header,$data,$csv_path))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                            
+                        }
+                        //选择mob_raw_install_log
+                        if($post['Redshift']['source']==1)
+                        {   
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['raw_install_select']);
+                            $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[1]);
+                            if($data){
+
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path.$file_name;
+                                if($this->genCsv($header,$data,$csv_path))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                        }
+
+                        //选择mob_raw_install_log
+                        if($post['Redshift']['source']==2)
+                        {   
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['event_select']);
+                            $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[2]);
+                            if($data){
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path.$file_name;
+                                if($this->genCsv($header,$data,$csv_path))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                        }
+
+                        break;
+                    case '1':
+                        
+                        $advertiser='\''.$post['Redshift']['advertiser'].'\'';
+                        
+                        if($post['Redshift']['source']==0)
+                        {
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['install_select']);
+                            $data=$this->exportByadvertiser($start_time,$end_time,$advertiser,$select_option,$this->table[0]);
+                            if($data){
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path.$file_name;
+                                if($this->genCsv($header,$data,$csv_path))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                        }
+
+                        if($post['Redshift']['source']==1)
+                        {
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['raw_install_select']);
+                            $data=$this->exportByadvertiser($start_time,$end_time,$advertiser,$select_option,$this->table[1]);
+                            if($data){
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path.$file_name;
+                                if($this->genCsv($header,$data,$csv_path))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                        }
+
+                        if($post['Redshift']['source']==2)
+                        {
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['event_select']);
+                            $data=$this->exportByadvertiser($start_time,$end_time,$advertiser,$select_option,$this->table[2]);
+                            if($data){
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path.$file_name;
+                                if($this->genCsv($header,$data,$csv_path))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                        }
+
+                        break;
+                    default:
+                        $post['Redshift']['advertiser']='';
+                        //拼接uuid
+                        $uuids='\''.str_replace(',','\',\'',$post['Redshift']['uuid']).'\'';
+                        
+                        $role=func::getRole();
+                        
+                        if($role['role']=='to')
+                        {
+                            //判断network是否为空
+                            if ($post['Redshift']['network']) 
+                            {
+                                $networks='and a.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                            }
+                            else
+                            {
+                                $manager=Yii::$app->session['user']['username'];
+                                $sql='select network from channel_map where manager=:manager';
+                                $channel=Channel_map::findBySql($sql,[':manager'=>$manager])->asArray()->all();
+                                
+                                $cbs='';
+                                $str=',';
+                                foreach ($channel as $k=>$v) {
+                                    if(count($channel)-$k==1)
+                                    {
+                                        $str='';
+                                    }
+                                    $cbs.='\''.$v['network'].'\''.$str;
+                                }
+                                $networks="and a.network in ($cbs)";
+                                
+                            }
+                        }
+                        else{
+                            //判断network是否为空
+                            if ($post['Redshift']['network']) {
+                                $networks='and a.network in('.'\''.str_replace(',','\',\'',$post['Redshift']['network']).'\''.')';
+                            }
+                            else
+                            {
+                                $networks='';
+                            }
+                        }
+                        
+                        //选择install log
+                        if($post['Redshift']['source']==0)
+                        {   
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['install_select']);
+                            $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[0]);
+                            if($data)
+                            {
+
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path.$file_name;
+                                if($this->genCsv($header,$data,$csv_path))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                            
+                        }
+                        //选择mob_raw_install_log
+                        if($post['Redshift']['source']==1)
+                        {   
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['raw_install_select']);
+                            $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[1]);
+                            if($data){
+
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path.$file_name;
+                                if($this->genCsv($header,$data,$csv_path))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                        }
+
+                        //选择mob_raw_install_log
+                        if($post['Redshift']['source']==2)
+                        {   
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['event_select']);
+                            $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[2]);
+                            if($data){
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path.$file_name;
+                                if($this->genCsv($header,$data,$csv_path))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                        }
+                        break;
+                }
+
+            }
+            
+        }
+        return $this->render('index',['model'=>$model,'install_selects'=>$select_for_install,'select_for_raw_install'=>$select_for_raw_install,'select_for_event'=>$select_for_event]);
     }
 
+    public function getByselect($all_selects,$source_select)
+    {
+        //拼接select字符串
+        foreach ($all_selects as $v) {
+            foreach ($source_select as $option) {
+                if ($option==$v['id']) {
+                    $name[]=$v['name'];
+                }
+            }
+        }
+        $select_option=implode(",", $name);
+        return $select_option;
+    }
+
+    public function getSelects($sql)
+    {
+        return $selects=Select::findBySql($sql)->asArray()->all();
+    }
+
+    public function actionGetbyuuid()
+    {
+
+        if (Yii::$app->request->isGet) {
+            if (!empty(Yii::$app->request->get('uuid'))) {
+                
+                $uuid=Yii::$app->request->get('uuid');
+            }
+            else
+            {
+                return $uuid='';
+            }
+        }else
+        {
+            return '';
+        }
+
+        
+        $result=func::getByuuid($uuid);
+        echo json_encode($result);
+    }
+
+    public function actionGetbyadvertiser()
+    {
+
+        if (Yii::$app->request->isGet) {
+            if (!empty(Yii::$app->request->get('advertiser'))) {
+                
+                $advertiser=Yii::$app->request->get('advertiser');
+            }
+            else
+            {
+                return $advertiser='';
+            }
+        }else
+        {
+            return '';
+        }
+        
+        $advs=[];
+        $result=func::getByadvertiser($advertiser);
+        foreach ($result as $v) {
+            $advs[]=$v['adv_name'];
+        }
+        $advs_str=implode('","', $advs);
+        echo '["'.$advs_str.'"]';
+    }
+
+    public function actionGetbynetwork()
+    {
+        if (Yii::$app->request->isGet) {
+            if (!empty(Yii::$app->request->get('network'))) {
+                
+                $network=Yii::$app->request->get('network');
+            }
+            else
+            {
+                return $network='';
+            }
+        }else
+        {
+            return '';
+        }
+
+        $result=func::getBychannel($network);
+        echo json_encode($result);
+    }
+
+    public function genCsv($header,$contents,$path)
+    {
+        
+        $handle = fopen( $path, 'wb' );
+        if ($handle) {
+            foreach ($header as $k=>$v) {
+               $header[$k]=iconv( 'UTF-8', 'GB2312//IGNORE', $v );
+            }
+            
+            fputcsv( $handle, $header ); //写入header
+            
+            foreach ($contents as $k=>$v) {
+
+                foreach ($v as $value) {
+                    $new[$k][]=iconv( 'UTF-8', 'GB2312//IGNORE', $value);
+                }
+            fputcsv( $handle, $new[$k] );
+            }
+            if(fclose($handle))
+            {
+                return true;
+            }
+
+        }    
+    }
 }
