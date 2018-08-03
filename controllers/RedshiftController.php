@@ -587,7 +587,10 @@ class RedshiftController extends CommonController
 
     public function genCsv($header,$contents,$path)
     {
-        
+        if(!file_exists($path))
+        {
+            mkdir($path, 0777, true);
+        }
         $handle = fopen( $path, 'wb' );
         if ($handle) {
             foreach ($header as $k=>$v) {
