@@ -10,10 +10,10 @@ use yii\web\Response;
 use yii\bootstrap\ActiveForm;
 use app\models\Channel_map;
 use app\common\func;
+use moonland\phpexcel\Excel;
 use app\models\Select;
 use yii\helpers\Url;
 use app\models\Campinfo;
-use moonland\phpexcel\Excel;
 class RedshiftController extends CommonController
 {   
     //上传文件路径
