@@ -159,7 +159,7 @@ use app\common\func;
 
                     foreach ($pms as $v) {
                         
-                        if($v['pm']!==$username)
+                        if(strtolower($v['pm'])!==strtolower($username))
                         {
                             $this->addError('uuid','您没有权限查看'.$v['uuid']);
                         }
@@ -184,7 +184,7 @@ use app\common\func;
                     $oms=$this->checkOm($cbs);
                     foreach ($oms as $v) {
                         
-                        if($v['manager']!==$username)
+                        if(strtolower($v['manager'])!==strtolower($username))
                         {
                             $this->addError('network','您没有权限查看'.$v['network']);
                         }
