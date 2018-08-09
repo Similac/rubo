@@ -6,7 +6,6 @@ use kartik\datetime\DateTimePicker;
 use app\common\func;
 use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
-use yii\bootstrap\Alert;
 AppAsset::register($this);
 ?>
 <style>
@@ -99,23 +98,23 @@ AppAsset::register($this);
           </div>
           
           <div class="form-group" id="conversion_log">
-            <?php  $model->install_select = [1,2,3,4,5,7,8,9,10,12,13,20,23,24,26,27,28,86,87,88];?>
+            <?php  $model->install_select = [1,2,3,4,5,6,7,8,9,10,11];?>
             <?= $form->field($model, 'install_select')->inline()->checkboxList(
-              ArrayHelper::map($install_selects,'id','content'),['class' => 'col-sm-8','itemOptions'=>array('style'=>'margin:4px')]
+              ArrayHelper::map($install_selects,'id','content'),['class' => 'col-sm-8','itemOptions'=>array('style'=>'margin:6px')]
             );?>
           </div>
 
           <div class="form-group" id="raw_install_log" style="display:none">
-            <?php  $model->raw_install_select = [29,30,31,32,33,35,36,37,38,40,41,42,44,45,46,52,55,56,58,59,60,61,62];?>
+            <?php  $model->raw_install_select = [24,25,26,27,28,29,30,31,32,33,34,35,36,37,38];?>
             <?= $form->field($model, 'raw_install_select')->inline()->checkboxList(
-              ArrayHelper::map($select_for_raw_install,'id','content'),['class' => 'col-sm-8','itemOptions'=>array('style'=>'margin:4px')]
+              ArrayHelper::map($select_for_raw_install,'id','content'),['class' => 'col-sm-8','itemOptions'=>array('style'=>'margin:6px')]
             );?>
           </div>
           
           <div class="form-group" id="event_log" style="display:none">
-            <?php  $model->event_select = [63,64,65,66,67,68,36,69,71,72,73,74,75,76,79,81,82,84,85,91,92,93,94];?>
+            <?php  $model->event_select = [57,58,59,60,61,62,63,64,65,66,67,68,69,70];?>
             <?= $form->field($model, 'event_select')->inline()->checkboxList(
-              ArrayHelper::map($select_for_event,'id','content'),['class' => 'col-sm-8','itemOptions'=>array('style'=>'margin:4px')]
+              ArrayHelper::map($select_for_event,'id','content'),['class' => 'col-sm-8','itemOptions'=>array('style'=>'margin:6px')]
             );?>
           </div>
           
