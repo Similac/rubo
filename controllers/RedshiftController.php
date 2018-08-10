@@ -96,9 +96,8 @@ class RedshiftController extends CommonController
             $post=Yii::$app->request->post();
             
             $model->upload_file = UploadedFile::getInstance($model,'upload_file');
-            //$model->upload_file->name = iconv("UTF-8","gb2312",$model->upload_file->name);//这里是处理中文的问题，非中文不需要
             $post['Deducted']['upload_file']=$model->upload_file;
-
+            
             if($model->load($post) && $model->upload())
             {   
                 $file_name=$model->upload_file->name;
@@ -122,7 +121,7 @@ class RedshiftController extends CommonController
                     $matchData[] = "'".$row[$column_name]."'";
                     //$clickids.="'".$row[$column_name]."'".(is_null($row[$column_name])?'':',');
                 }
-
+                
                 $matchData = implode(',', array_filter($matchData));
                 
                 switch ($post['Deducted']['match_type']) {
@@ -174,7 +173,7 @@ class RedshiftController extends CommonController
     {   
         set_time_limit(0);
 
-        $all_selects=$this->getSelects("select id,content,source,name from shop_selects");
+        $all_selects=$this->getSelects("select id,content,source,name from shop_selects ORDER BY source");
         
         foreach ($all_selects as $v) {
             if($v['source']==0)
