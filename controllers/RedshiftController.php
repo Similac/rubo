@@ -27,7 +27,9 @@ class RedshiftController extends CommonController
     //     "redshift/index",
     //     "A"
     // ];
-    public $table=['mob_install_log','mob_raw_install_log','mob_event_log'];
+    public $count_result="count(*)";
+
+    public $table=['mob_install_log','mob_raw_install_log','mob_event_log','mob_click_log'];
 
     //生成csv的路径
     public $csv_path=__DIR__.'/../web/general_csv';
@@ -181,9 +183,12 @@ class RedshiftController extends CommonController
                $select_for_install[]=$v; 
             }elseif ($v['source']==1) {
                 $select_for_raw_install[]=$v;
-            }else
+            }elseif ($v['source']==2)
             {
                 $select_for_event[]=$v;
+            }elseif ($v['source']==3)
+            {
+                $select_for_click[]=$v;
             }
         }
 
@@ -251,10 +256,16 @@ class RedshiftController extends CommonController
                         //选择install log
                         if($post['Redshift']['source']==0)
                         {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['install_select']);
                             $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[0]);
                             if($data)
                             {   
+                            
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
                                 $csv_path=$this->csv_path;
@@ -273,6 +284,11 @@ class RedshiftController extends CommonController
                         //选择mob_raw_install_log
                         if($post['Redshift']['source']==1)
                         {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['raw_install_select']);
                             $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[1]);
                             if($data){
@@ -292,12 +308,45 @@ class RedshiftController extends CommonController
                             }
                         }
 
-                        //选择mob_raw_install_log
+                        //选择mob_event_log
                         if($post['Redshift']['source']==2)
                         {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['event_select']);
                             $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[2]);
                             if($data){
+                                
+                                $header=array_keys($data[0]);
+                                $file_name=time().'.csv';
+                                $csv_path=$this->csv_path;
+                                if($this->genCsv($header,$data,$csv_path,$file_name))
+                                {   
+                                    $url=Url::to("@web/general_csv/$file_name", true);
+                                    return ['status'=>1,'msg'=>'导出成功,下方是下载链接','url'=>$url];
+                                }
+
+                            }else
+                            {   
+                                return ['status'=>0,'msg'=>'数据为空,请检查输入条件'];
+                            }
+                        }
+
+                        //选择mob_click_log
+                        if($post['Redshift']['source']==3)
+                        {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
+                            $select_option=$this->getByselect($all_selects,$post['Redshift']['click_select']);
+                            $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[3]);
+                            if($data){
+                                
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
                                 $csv_path=$this->csv_path;
@@ -319,10 +368,16 @@ class RedshiftController extends CommonController
                         $advertiser='\''.$post['Redshift']['advertiser'].'\'';
                         
                         if($post['Redshift']['source']==0)
-                        {
+                        {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['install_select']);
                             $data=$this->exportByadvertiser($start_time,$end_time,$advertiser,$select_option,$this->table[0]);
                             if($data){
+
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
                                 $csv_path=$this->csv_path;
@@ -339,10 +394,16 @@ class RedshiftController extends CommonController
                         }
 
                         if($post['Redshift']['source']==1)
-                        {
+                        {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['raw_install_select']);
                             $data=$this->exportByadvertiser($start_time,$end_time,$advertiser,$select_option,$this->table[1]);
                             if($data){
+                                
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
                                 $csv_path=$this->csv_path;
@@ -359,10 +420,16 @@ class RedshiftController extends CommonController
                         }
 
                         if($post['Redshift']['source']==2)
-                        {
+                        {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['event_select']);
                             $data=$this->exportByadvertiser($start_time,$end_time,$advertiser,$select_option,$this->table[2]);
                             if($data){
+                                
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
                                 $csv_path=$this->csv_path;
@@ -426,11 +493,16 @@ class RedshiftController extends CommonController
                         //选择install log
                         if($post['Redshift']['source']==0)
                         {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['install_select']);
                             $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[0]);
                             if($data)
                             {
-
+                                
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
                                 $csv_path=$this->csv_path;
@@ -449,6 +521,11 @@ class RedshiftController extends CommonController
                         //选择mob_raw_install_log
                         if($post['Redshift']['source']==1)
                         {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['raw_install_select']);
                             $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[1]);
                             if($data){
@@ -471,9 +548,15 @@ class RedshiftController extends CommonController
                         //选择mob_raw_install_log
                         if($post['Redshift']['source']==2)
                         {   
+                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            if($count_result[0]['count']>350000)
+                            {
+                               return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
+                            }
                             $select_option=$this->getByselect($all_selects,$post['Redshift']['event_select']);
                             $data=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$select_option,$this->table[2]);
                             if($data){
+
                                 $header=array_keys($data[0]);
                                 $file_name=time().'.csv';
                                 $csv_path=$this->csv_path;
@@ -494,7 +577,7 @@ class RedshiftController extends CommonController
             }
             
         }
-        return $this->render('index',['model'=>$model,'install_selects'=>$select_for_install,'select_for_raw_install'=>$select_for_raw_install,'select_for_event'=>$select_for_event]);
+        return $this->render('index',['model'=>$model,'install_selects'=>$select_for_install,'select_for_raw_install'=>$select_for_raw_install,'select_for_event'=>$select_for_event,'select_for_click'=>$select_for_click]);
     }
 
     public function getByselect($all_selects,$source_select)
@@ -612,4 +695,5 @@ class RedshiftController extends CommonController
 
         }    
     }
+
 }

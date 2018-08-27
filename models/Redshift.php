@@ -19,6 +19,7 @@ use app\common\func;
     public $install_select;
     public $raw_install_select;
     public $event_select;
+    public $click_select;
     // public $all=[
     //     "fix/index",
     //     "load/index",
@@ -56,6 +57,9 @@ use app\common\func;
             ['install_select','requiredByinstall','skipOnEmpty' => false, 'skipOnError' => false],
             ['raw_install_select','requiredByrawinstall','skipOnEmpty' => false, 'skipOnError' => false],
             ['event_select','requiredByevent','skipOnEmpty' => false, 'skipOnError' => false],
+            ['click_select','requiredByclick','skipOnEmpty' => false, 'skipOnError' => false],
+            ['type','noselectClient','skipOnEmpty' => false, 'skipOnError' => false],
+            ['end_time','timeLimit','skipOnEmpty' => false, 'skipOnError' => false]
     	];
     	
     }
@@ -75,8 +79,32 @@ use app\common\func;
             'event_select'=>'event log导出字段',
             'type'=>'维度类型',
             'defraud_tag'=>'扣量标记',
-            'source'=>'数据源'
+            'source'=>'数据源',
+            'click_select'=>'click_log导出字段'
     	];
+    }
+
+    public function timeLimit($attribute,$params)
+    {
+        if($this->source==3)
+        {
+            
+            if((time()-strtotime($this->end_time)>=4*24*60*60)||(time()-strtotime($this->start_time))>=4*24*60*60)
+            {
+                $this->addError('end_time','开始和结束时间必须在最近四天内');
+            }
+        }
+    }
+
+    public function noselectClient($attribute,$params)
+    {
+        if($this->source==3)
+        {
+            if($this->type==1)
+            {
+                $this->addError('type','只能导uuid维度');
+            }
+        }
     }
 
     public function requiredByinstall($attribute,$params)
@@ -106,6 +134,15 @@ use app\common\func;
         }
     }
 
+    public function requiredByclick($attribute,$params)
+    {
+        if ($this->source==3) {
+            if (empty($this->$attribute)){
+                $this->addError($attribute, "click导出字段不能为空");
+            }
+        }
+    }    
+
     public function requiredBytype1($attribute,$params)
     {
         if ($this->type==0) {
@@ -119,10 +156,22 @@ use app\common\func;
     {
         
         $uuid_arr=explode(",", $this->uuid);
-        if(count($uuid_arr)>3)
+        if($this->source==3)
         {
-            $this->addError($attribute, "uuid最多只能查询2个");
+            if(count($uuid_arr)>1)
+            {
+                $this->addError($attribute, "uuid最多只能查询1个");
+            }
         }
+        else
+        {
+            if(count($uuid_arr)>=3)
+            {
+                $this->addError($attribute, "uuid最多只能查询2个");
+            }
+        }
+
+
     }
 
     public function advertiserLimit($attribute,$params)
@@ -166,6 +215,7 @@ use app\common\func;
                     }
                 }
             }
+
         }
     }
 
@@ -198,7 +248,7 @@ use app\common\func;
     public function checkOm($cbs)
     {
         $sql="select
-            cd,network,manager
+            cb,network,manager
         from
             channel_map
         where
