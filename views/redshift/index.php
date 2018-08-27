@@ -66,7 +66,8 @@ AppAsset::register($this);
             <?= $form->field($model,'source')->inline()->radioList([
                   '0'=>'conversion data',
                   '1'=>'install+reject data',
-                  '2'=>'event data'
+                  '2'=>'event data',
+                  '3'=>'click data'
             ])?>
           </div>
 
@@ -78,7 +79,8 @@ AppAsset::register($this);
                 ])?>
               <?php else:?>
                 <?php $model->type=0;?>
-                <?= $form->field($model,'type')->inline()->radioList([
+                <?= $form->field($model,'type',
+                  ['wrapperOptions' => ['style' => 'display:inline-block']])->inline(true)->radioList([
                   '0'=>'uuid维度',
                   '1'=>'advertiser维度'
                 ])?>
@@ -115,6 +117,13 @@ AppAsset::register($this);
             <?php  $model->event_select = [57,58,59,60,61,62,63,64,65,66,67,68,69,70];?>
             <?= $form->field($model, 'event_select')->inline()->checkboxList(
               ArrayHelper::map($select_for_event,'id','content'),['class' => 'col-sm-8','itemOptions'=>array('style'=>'margin:6px')]
+            );?>
+          </div>
+
+          <div class="form-group" id="click_log" style="display:none">
+            <?php  $model->click_select = [83,84,85,86,87,88,89,90,91,92,93,94];?>
+            <?= $form->field($model, 'click_select')->inline()->checkboxList(
+              ArrayHelper::map($select_for_click,'id','content'),['class' => 'col-sm-8','itemOptions'=>array('style'=>'margin:6px')]
             );?>
           </div>
           
@@ -180,7 +189,7 @@ $(document).on('beforeSubmit', 'form#loadForm', function () {
       } 
     }); 
     return false; 
-  }); 
+  });
 
   $(document).ready(function(){
     $('#uuids').tagsinput({
@@ -232,6 +241,8 @@ $(document).on('beforeSubmit', 'form#loadForm', function () {
       $("#conversion_log").show();
       $("#raw_install_log").hide();
       $("#event_log").hide();
+      $("#click_log").hide();
+      $('input:radio[name="Redshift[type]"]').attr("disabled",false);
     }
     
     if($(this).val()==1)
@@ -239,14 +250,32 @@ $(document).on('beforeSubmit', 'form#loadForm', function () {
       $("#raw_install_log").show();
       $("#event_log").hide();
       $("#conversion_log").hide();
+      $("#click_log").hide();
+      $('input:radio[name="Redshift[type]"]').attr("disabled",false);
     }
+    
     if($(this).val()==2)
     {
       $("#conversion_log").hide();
       $("#event_log").show();
       $("#raw_install_log").hide();
+      $("#click_log").hide();
+      $('input:radio[name="Redshift[type]"]').attr("disabled",false);
     }
-
+  
+    if($(this).val()==3)
+    {
+      $("#conversion_log").hide();
+      $("#event_log").hide();
+      $("#click_log").show();
+      $("#raw_install_log").hide();
+      
+      $("#advertiser").hide();
+      $("#uuid").show();
+      $("#network").show();
+    }
+    
+  
   })
 
 <?php $this->endBlock() ?>
