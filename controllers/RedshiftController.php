@@ -369,7 +369,7 @@ class RedshiftController extends CommonController
                         
                         if($post['Redshift']['source']==0)
                         {   
-                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            $count_result=$this->exportByadvertiser($start_time,$end_time,$advertiser,$this->count_result,$this->table[3]);
                             if($count_result[0]['count']>350000)
                             {
                                return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
@@ -395,7 +395,7 @@ class RedshiftController extends CommonController
 
                         if($post['Redshift']['source']==1)
                         {   
-                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            $count_result=$this->exportByadvertiser($start_time,$end_time,$advertiser,$this->count_result,$this->table[3]);
                             if($count_result[0]['count']>350000)
                             {
                                return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
@@ -421,7 +421,7 @@ class RedshiftController extends CommonController
 
                         if($post['Redshift']['source']==2)
                         {   
-                            $count_result=$this->exportByuuid($start_time,$end_time,$uuids,$networks,$this->count_result,$this->table[3]);
+                            $count_result=$this->exportByadvertiser($start_time,$end_time,$advertiser,$this->count_result,$this->table[3]);
                             if($count_result[0]['count']>350000)
                             {
                                return ['status'=>0,'msg'=>'亲,数据超350000,请分批次导吧'];
