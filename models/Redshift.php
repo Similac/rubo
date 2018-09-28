@@ -231,6 +231,10 @@ use app\common\func;
                     //拼接network
                     $cbs='\''.str_replace(',','\',\'',trim($this->network)).'\'';
                     $username=Yii::$app->session['user']['username'];
+                    if($username=='shane.chan')
+                    {
+                        $username='Shane';
+                    }
                     $oms=$this->checkOm($cbs);
                     foreach ($oms as $v) {
                         
