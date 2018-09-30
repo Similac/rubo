@@ -8,15 +8,15 @@ class func{
 
 	public static function getPermissions()
 	{
-        //return (array) \Yii::$app->session['user']['permissions']->all;
-        return [
-            "fix/index",
-            "load/index",
-            "load/list",
-            "redshift/deducted",
-            "redshift/index",
-            "redshift_data_forTO"
-        ];
+        return (array) \Yii::$app->session['user']['permissions']->all;
+        // return [
+        //     "fix/index",
+        //     "load/index",
+        //     "load/list",
+        //     "redshift/deducted",
+        //     "redshift/index",
+        //     "redshift_data_forTO"
+        // ];
 	}
 
 	public static function getRole()
@@ -90,5 +90,17 @@ class func{
         $camp=Channel_map::findBySql($sql)->asArray()->all();
 		return $camp;
 	}
+
+	public static function checkTeamleader($ids)
+    {
+    	$sql="select
+            id,uuid,pm_team
+        from
+            mob_camp_info
+        where
+            id in ($ids)";
+        $pm_team=Campinfo::findBySql($sql)->asArray()->all();
+        return $pm_team;
+    }
 
 }
