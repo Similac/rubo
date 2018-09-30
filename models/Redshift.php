@@ -59,7 +59,8 @@ use app\common\func;
             ['event_select','requiredByevent','skipOnEmpty' => false, 'skipOnError' => false],
             ['click_select','requiredByclick','skipOnEmpty' => false, 'skipOnError' => false],
             ['type','noselectClient','skipOnEmpty' => false, 'skipOnError' => false],
-            ['end_time','timeLimit','skipOnEmpty' => false, 'skipOnError' => false]
+            ['end_time','timeLimit','skipOnEmpty' => false, 'skipOnError' => false],
+            ['uuid','checkByteamleader','skipOnEmpty' => false, 'skipOnError' => false],
     	];
     	
     }
@@ -272,6 +273,52 @@ use app\common\func;
             id in ($ids)";
         $pms=Campinfo::findBySql($sql)->asArray()->all();
         return $pms;
+    }
+
+    //检查pm leader可以查询自己组的数据
+    public function checkByteamleader()
+    {
+        if ($this->type==0)
+        {   
+
+            $roles=[];
+            $pm_team=[];
+            if(in_array("redshift_data_for_PMTeam_Asia", func::getPermissions()))
+            {
+                $roles[]="redshift_data_for_PMTeam_Asia";
+                $pm_team[]="PM-亚洲";
+            }
+
+            if(in_array("redshift_data_for_PMTeam_NorthAmerica", func::getPermissions()))
+            {
+               $roles[]="redshift_data_for_PMTeam_NorthAmerica";
+               $pm_team[]="PM-北美";
+            }
+
+            if(in_array("redshift_data_for_PMTeam_China", func::getPermissions()))
+            {
+                $roles[]="redshift_data_for_PMTeam_China";
+                $pm_team[]="PM-中国";
+            }
+
+            if(in_array("redshift_data_for_PMTeam_EMEA", func::getPermissions()))
+            {
+                $roles[]="redshift_data_for_PMTeam_EMEA";
+                $pm_team[]="PM-欧洲";
+            }
+
+            //拼接uuid
+            $uuids='\''.str_replace(',','\',\'',trim($this->uuid)).'\'';
+            $result=func::checkTeamleader($uuids);
+            foreach ($result as $res) {
+                if(!in_array($res['pm_team'], $pm_team))
+                {
+                    $this->addError('uuid',$res['uuid'].'不是你们组的offer');
+                }
+            }
+
+        }
+
     }
 
  }
