@@ -3,8 +3,6 @@ namespace app\models;
 
 use yii\db\ActiveRecord;
 use Yii;
-use app\models\Campinfo;
-use app\models\Channel_map;
 use app\common\func;
  class Redshift extends ActiveRecord
  {
@@ -205,13 +203,13 @@ use app\common\func;
                     //拼接uuid
                     $uuids='\''.str_replace(',','\',\'',trim($this->uuid)).'\'';
                     $username=Yii::$app->session['user']['username'];
-                    $pms=$this->checkPm($uuids);
+                    $pms=func::checkPm($uuids);
 
                     foreach ($pms as $v) {
                         
                         if(strtolower($v['pm'])!==strtolower($username))
                         {
-                            $this->addError('uuid','您没有权限查看'.$v['uuid']);
+                            $this->addError('uuid',$v['uuid']."不是您的offer");
                         }
                     }
                 }
@@ -232,11 +230,7 @@ use app\common\func;
                     //拼接network
                     $cbs='\''.str_replace(',','\',\'',trim($this->network)).'\'';
                     $username=Yii::$app->session['user']['username'];
-                    if($username=='shane.chan')
-                    {
-                        $username='Shane';
-                    }
-                    $oms=$this->checkOm($cbs);
+                    $oms=func::checkOm($cbs);
                     foreach ($oms as $v) {
                         
                         if(strtolower($v['manager'])!==strtolower($username))
@@ -247,32 +241,6 @@ use app\common\func;
                 }
             }
         }
-    }
-
-    //查询manager和network
-    public function checkOm($cbs)
-    {
-        $sql="select
-            cb,network,manager
-        from
-            channel_map
-        where
-            cb in ($cbs)";
-
-        $oms=Channel_map::findBySql($sql)->asArray()->all();
-        return $oms;
-    }
-
-    public function checkPm($ids)
-    {
-        $sql="select
-            id,uuid,pm
-        from
-            mob_camp_info
-        where
-            id in ($ids)";
-        $pms=Campinfo::findBySql($sql)->asArray()->all();
-        return $pms;
     }
 
     //检查pm leader可以查询自己组的数据
@@ -307,6 +275,11 @@ use app\common\func;
                 $pm_team[]="PM-欧洲";
             }
 
+            if(in_array("redshift_data_forAll", func::getPermissions()))
+            {
+                return;
+            }
+
             //拼接uuid
             $uuids='\''.str_replace(',','\',\'',trim($this->uuid)).'\'';
             $result=func::checkTeamleader($uuids);
@@ -321,4 +294,5 @@ use app\common\func;
 
     }
 
+    
  }
