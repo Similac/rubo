@@ -204,6 +204,10 @@ use app\common\func;
                     $uuids='\''.str_replace(',','\',\'',trim($this->uuid)).'\'';
                     $username=Yii::$app->session['user']['username'];
                     $pms=func::checkPm($uuids);
+                    if($username=="yanan.cao")
+                    {
+                        $username="Nan";
+                    }
 
                     foreach ($pms as $v) {
                         
@@ -280,6 +284,16 @@ use app\common\func;
                 return;
             }
 
+            if(in_array("redshift_data_forPM", func::getPermissions()))
+            {
+                return;
+            }
+
+            if(in_array("redshift_data_forTO", func::getPermissions()))
+            {
+                return;
+            }
+            
             //拼接uuid
             $uuids='\''.str_replace(',','\',\'',trim($this->uuid)).'\'';
             $result=func::checkTeamleader($uuids);
