@@ -4,6 +4,7 @@ use Yii;
 use app\models\Campinfo;
 use johnnylei\csv\TheCsv;
 use app\models\Channel_map;
+
 class func{
 
 	public static function getPermissions()
@@ -15,7 +16,8 @@ class func{
         //     "load/list",
         //     "redshift/deducted",
         //     "redshift/index",
-        //     "redshift_data_forTO"
+        //     "redshift_data_forPM"
+            
         // ];
 	}
 
@@ -91,7 +93,33 @@ class func{
 		return $camp;
 	}
 
-	public static function checkTeamleader($ids)
+	//查询manager和network
+    public static function checkOm($cbs)
+    {
+        $sql="select
+            cb,network,manager
+        from
+            channel_map
+        where
+            cb in ($cbs)";
+
+        $oms=Channel_map::findBySql($sql)->asArray()->all();
+        return $oms;
+    }
+
+    public static function checkPm($ids)
+    {
+        $sql="select
+            id,uuid,pm
+        from
+            mob_camp_info
+        where
+            id in ($ids)";
+        $pms=Campinfo::findBySql($sql)->asArray()->all();
+        return $pms;
+    }
+
+    public static function checkTeamleader($ids)
     {
     	$sql="select
             id,uuid,pm_team
@@ -103,4 +131,5 @@ class func{
         return $pm_team;
     }
 
+    
 }
