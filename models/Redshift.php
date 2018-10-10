@@ -214,6 +214,16 @@ use app\common\func;
                         $username="chenyiyi";
                     }
 
+                    if($username=="charlotte.wang")
+                    {
+                        $username="Charlotte";
+                    }
+
+                    if($username=="suxin")
+                    {
+                        $username="Gary";
+                    }
+
                     foreach ($pms as $v) {
                         
                         if(strtolower($v['pm'])!==strtolower($username))
