@@ -202,56 +202,15 @@ use app\common\func;
                 {
                     //拼接uuid
                     $uuids='\''.str_replace(',','\',\'',trim($this->uuid)).'\'';
-                    $username=Yii::$app->session['user']['username'];
+                    //账号中心id
+                    $id=Yii::$app->session['user']['id'];
+                    $info=json_decode(func::getUser($id),true);
+                    
                     $pms=func::checkPm($uuids);
-                    if($username=="yanan.cao")
-                    {
-                        $username="Nan";
-                    }
-
-                    if($username=="yiyi.chen")
-                    {
-                        $username="chenyiyi";
-                    }
-
-                    if($username=="charlotte.wang")
-                    {
-                        $username="Charlotte";
-                    }
-
-                    if($username=="suxin")
-                    {
-                        $username="Gary";
-                    }
-
-                    if($username=="jianqing.wu")
-                    {
-                        $username="alisa";
-                    }
-
-                    if($username=="abel.lai")
-                    {
-                        $username="abel";
-                    }
-
-                    if($username=="weiwen.ye")
-                    {
-                        $username="viki.yip";
-                    }
-
-                    if($username=="yingxin.wang")
-                    {
-                        $username="janet";
-                    }
-
-                    if($username=="jiaxin.yang")
-                    {
-                        $username="jiaxin";
-                    }
-
+                    
                     foreach ($pms as $v) {
                         
-                        if(strtolower($v['pm'])!==strtolower($username))
+                        if(strtolower($v['pm'])!==strtolower($info[0]['username']))
                         {
                             $this->addError('uuid',$v['uuid']."不是您的offer");
                         }
@@ -273,11 +232,14 @@ use app\common\func;
                 if(!empty($this->network)){
                     //拼接network
                     $cbs='\''.str_replace(',','\',\'',trim($this->network)).'\'';
-                    $username=Yii::$app->session['user']['username'];
+                   
+                    //账号中心id
+                    $id=Yii::$app->session['user']['id'];
+                    $info=json_decode(func::getUser($id),true);
                     $oms=func::checkOm($cbs);
                     foreach ($oms as $v) {
                         
-                        if(strtolower($v['manager'])!==strtolower($username))
+                        if(strtolower($v['manager'])!==strtolower($info[0]['username']))
                         {
                             $this->addError('network','您没有权限查看'.$v['network']);
                         }
