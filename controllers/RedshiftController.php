@@ -70,7 +70,25 @@ class RedshiftController extends CommonController
     //根据广告主和clickid去匹配扣量信息
     public function matchTool($start_time,$end_time,$advertiser,$matchData,$match_column)
     {
-        $sql="select test2.uuid,test3.network as qudao,test3.alias,test1.mb_subid,'mob'||SUBSTRING(md5(test1.network||'_'||test1.mb_subid),0,17) as no_bt_encodeid,test1.defraud,test1.mb_af_1,test1.mb_af_2,test3.manager,test1.$match_column
+                    $sql="select to_char(
+            TIMESTAMP WITHOUT TIME ZONE 'epoch' +(timestamp + 3600 * 8) * INTERVAL '1 second',
+            'YYYY-MM-DD HH24:MI:SS'
+            ) AS install_time,to_char(
+            TIMESTAMP WITHOUT TIME ZONE 'epoch' +(STRTOL (SUBSTRING(p3, 0, 9), 16) + 3600 * 8) * INTERVAL '1 second',
+            'YYYY-MM-DD HH24:MI:SS'
+            ) AS click_time,(
+                    CASE
+                    WHEN test1 .network > 0 THEN
+                        (
+                            CASE
+                            WHEN p1 > 0 THEN
+                                test1 .p1 - STRTOL (SUBSTRING(p3, 0, 9), 16)
+                            ELSE
+                                test1 .timestamp - STRTOL (SUBSTRING(p3, 0, 9), 16)
+                            END
+                        )
+                    END
+                ) AS cti,test2.uuid,test3.network as qudao,test3.alias as channel_uuid,test1.mb_subid,'mob'||SUBSTRING(md5(test1.network||'_'||test1.mb_subid),0,17) as no_bt_encodeid,test1.defraud,test1.mb_af_1,test1.mb_af_2,test3.manager,test1.$match_column
             from mob_install_log test1
              left join mob_camp_info test2 on test1.uuid=test2.id
              left join channel_map test3 on test1.network=test3.cb
@@ -88,6 +106,7 @@ class RedshiftController extends CommonController
         $model = new Deducted();
         $sql='select distinct(adv_name) from mob_camp_info';
         $camp=Campinfo::findBySql($sql)->asArray()->all();
+        
         $advs=[];
         foreach ($camp as $key => $v) {
             $advs[]=$v['adv_name'];
@@ -112,7 +131,7 @@ class RedshiftController extends CommonController
                 $column_name=$post['Deducted']['clickid_column'];
                 // var_dump($rows);
                 // die();
-                foreach ($rows as $k=>$row) 
+                foreach ($rows as $k=>$row)
                 {   
                     
                     if(is_null($row[$column_name]))
@@ -139,7 +158,7 @@ class RedshiftController extends CommonController
                 }
                 
                 $data=$this->matchTool($start_time,$end_time,$advertiser,strtolower($matchData),$redshift_column);
-                
+
                 if(empty($data))
                 {
                     return 'redshift没有找到对应的数据';
@@ -163,7 +182,8 @@ class RedshiftController extends CommonController
                     }
 
                 }
-                
+
+
                 func::exportCsv($rows,explode('.', $file_name)[0]);
                 exit();
             }
