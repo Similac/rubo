@@ -79,7 +79,7 @@ class Chantemp extends Model
 	public $gdt_event_callback='rp.mobvista.com/gdt?log={$campid}&timeout=5&retry=10&client_id=1107820842&client_secret=qkfp1EEfGkiyoBcn';
 
 	//头条tracking link
-	public $tt_tracking_link='https://tracking.lenzmx.com/async_click?mb_auth=HhTlzUDRhy6u1hGw&idfa=__IDFA__&mb_ip=__IP__&mb_devid=__ANDROIDID1__&mb_imei=__IMEI__&aff_sub=__IMEI__&callback=__CALLBACK_PARAM__&os=__OS__&timestamp=__TS__';
+	public $tt_tracking_link='https://tracking.lenzmx.com/async_click?mb_auth=HhTlzUDRhy6u1hGw&idfa=__IDFA__&mb_ip=__IP__&mb_devid=__ANDROIDID1__&mb_imei=__IMEI__&aff_sub=__IMEI__&callback=__CALLBACK_PARAM__&os=__OS__&amptimestamp=__TS__';
 	//头条callback
 	public $tt_callback='http://rp.mobvista.com/pb?callback=http%3a%2f%2fad.toutiao.com%2ftrack%2factivate%2f%3fcallback%3d{$callback}%26os%3d{$os}&timeout=3&retry=8&log={$campid}%26muid%3d';
 	public $tt_event_callback='rp.mobvista.com/pb?timeout=3&retry=8&log={$campid}&callback=http%3a%2f%2fad.toutiao.com%2ftrack%2factivate%2f%3fcallback%3d"+info.match_result.data.query["callback"]+"%26os%3d"+info.match_result.data.query["os"]+"';
