@@ -91,6 +91,7 @@ class Chantemp extends Model
 	public $weibo_event_callback='appmonitor.biz.weibo.com/sdkserver/active?company=huiliangxinxi&IMP={$IMP}&action_type=';
 
 
+	
 	public function rules()
 	{
 		return [
